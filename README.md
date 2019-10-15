@@ -1,6 +1,6 @@
 # Gitegylet - Amoeba
 
-This is the homework repository for Attila Juhos(<NEPTUN), Péter Tóth(<NEPTUN>) and Dávid Bánóczi(W87ORP) for the 2019 fall semester
+This is the homework repository for Attila Juhos(<NEPTUN>), Péter Tóth(<NEPTUN>) and Dávid Bánóczi(W87ORP) for the 2019 fall semester
 deep learning course at BME.
 
 # Amoeba
