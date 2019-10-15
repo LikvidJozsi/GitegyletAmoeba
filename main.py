@@ -3,7 +3,7 @@ from AmoebaPlayGround.AmoebaView import ConsoleView
 from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
 import numpy as np
 
-
+# demo
 consoleAgent = ConsoleAgent()
 view = ConsoleView()
 trainer = AmoebaTrainer(consoleAgent,consoleAgent)

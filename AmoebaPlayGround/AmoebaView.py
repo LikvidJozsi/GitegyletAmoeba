@@ -1,4 +1,6 @@
 
+
+# The display function of a view is called by the AmoebaGame at init time and after every move
 class AmoebaView:
     def display_game_state(self,game_board):
         pass

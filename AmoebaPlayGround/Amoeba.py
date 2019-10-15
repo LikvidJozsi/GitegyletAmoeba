@@ -5,7 +5,6 @@ class Player(Enum):
     X = 0
     O = 1
 
-
 class AmoebaGame:
     def __init__(self,map_size,view=None):
         self.view = view
@@ -26,6 +25,8 @@ class AmoebaGame:
         self.history = []
         self.winner = None
         self.num_steps = 1
+        if self.view != None:
+            self.view.display_game_state(self.map)
 
     def step(self,action):
         player_symbol = self.get_symbol_value_of_next_player()

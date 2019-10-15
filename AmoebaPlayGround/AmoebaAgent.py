@@ -10,6 +10,7 @@ class AmoebaAgent:
 class ConsoleAgent(AmoebaAgent):
     def get_step(self, game_boards):
         answers = np.zeros((len(game_boards),2),dtype='int')
+        print('Give position in row column format (zero indexing):')
         for index,game_board in enumerate(game_boards):
             answer = input().split(' ')
             answers[index] = int(answer[0]), int(answer[1])
