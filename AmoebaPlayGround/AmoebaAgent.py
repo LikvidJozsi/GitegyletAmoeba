@@ -1,7 +1,7 @@
 import numpy as np
 
 class AmoebaAgent:
-    def get_step(self,game_board):
+    def get_step(self,game_boards):
         pass
 
     def train(self,game_board,played_action,reward):
