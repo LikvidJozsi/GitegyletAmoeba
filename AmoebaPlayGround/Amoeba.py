@@ -4,9 +4,21 @@ import numpy as np
 
 
 class Player(Enum):
-    X = 0
-    O = 1
+    X = 1
+    O = -1
+    NOBODY = 0
 
+    def get_other_player(self):
+        if self == Player.X:
+            return Player.O
+        else:
+            return Player.X
+
+
+class Symbol(Enum):
+    X = 1
+    O = -1
+    EMPTY = 0
 
 class AmoebaGame:
     def __init__(self, map_size, view=None):
@@ -18,6 +30,9 @@ class AmoebaGame:
 
     def init_map(self, map_size):
         self.map = np.zeros(map_size, dtype=int)
+        self.place_initial_symbol(map_size)
+
+    def place_initial_symbol(self, map_size):
         middle_of_map_y = round(map_size[0] / 2)
         middle_of_map_x = round(map_size[0] / 2)
         self.map[middle_of_map_x][middle_of_map_y] = 1
@@ -33,20 +48,16 @@ class AmoebaGame:
 
     def step(self, action):
         player_symbol = self.get_symbol_value_of_next_player()
-        if self.map[action[0], action[1]] != 0:
+        if self.map[action[0], action[1]] != Symbol.EMPTY.value:
             raise Exception('Trying to place symbol in position already occupied')
         self.map[action[0], action[1]] = player_symbol
         self.history.append(action)
         self.num_steps += 1
-        self.next_player = self.get_other_player(self.next_player)
+        self.next_player = self.next_player.get_other_player()
         if self.view != None:
             self.view.display_game_state(self.map)
 
-    def get_other_player(self, player):
-        if player == Player.X:
-            return Player.O
-        else:
-            return Player.X
+
 
     def has_game_ended(self):
         last_action = self.history[-1]
@@ -61,9 +72,15 @@ class AmoebaGame:
                       self.is_there_winning_line_in_direction(y_start=y + 4, x_start=x - 4,
                                                               y_direction=-1, x_direction=1))  # diagonal2
         if player_won:
-            self.winner = self.get_other_player(self.next_player)
+            self.winner = self.next_player.get_other_player()
+            if self.view != None:
+                self.view.game_ended(self.winner)
             return True
-        return self.is_map_full()
+        is_draw = self.is_map_full()
+        if is_draw and self.view != None:
+            self.view.game_ended(Player.NOBODY)
+        return is_draw
+
 
     def is_map_full(self):
         return self.num_steps == self.map.size
@@ -94,7 +111,7 @@ class AmoebaGame:
         return 0 <= y and y < self.map.shape[0] and 0 <= x and x < self.map.shape[1]
 
     def get_symbol_value_of_next_player(self):
-        return 1 if self.next_player == Player.X else -1
+        return Symbol.X.value if self.next_player == Player.X else Symbol.O.value
 
     def get_map_for_next_player(self):
         if self.next_player == Player.X:

@@ -2,12 +2,16 @@ import queue
 import threading
 from tkinter import *
 
+from AmoebaPlayGround.Amoeba import Symbol, Player
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
 
 
 # The display function of a view is called by the AmoebaGame at init time and after every move
 class AmoebaView:
     def display_game_state(self, game_board):
+        pass
+
+    def game_ended(self, winner: Player):
         pass
 
 
@@ -27,11 +31,12 @@ class ConsoleView(AmoebaView):
             return 'o'
         raise Exception('Unknown cell value')
 
+    def game_ended(self, winner: Player):
+        if winner != Player.NOBODY:
+            print('Game ended! Winner is %s' % (winner.name))
+        else:
+            print('Game ended! It is a draw')
 
-class Symbol(enum.Enum):
-    X = 1
-    O = -1
-    EMPTY = 0
 
 
 class BoardCell:
@@ -72,6 +77,7 @@ class GraphicalView(AmoebaView, AmoebaAgent):
         self.symbol_size = symbol_size
         self.board_size = board_size
         self.board_update_queue = queue.Queue()
+        self.message_queue = queue.Queue()
         self.clicked_cell = None
         self.move_entered_event = threading.Event()
         gui_thread = threading.Thread(target=self.create_window)
@@ -111,8 +117,15 @@ class GraphicalView(AmoebaView, AmoebaAgent):
         if not self.board_update_queue.empty():
             game_board = self.board_update_queue.get()
             self.update_board(game_board)
+        if not self.message_queue.empty():
+            message = self.message_queue.get()
+            self.display_message(message)
         call_delay_in_milliseconds = 100
         self.window.after(call_delay_in_milliseconds, lambda: self.check_for_board_update())
+
+    def display_message(self, message):
+        label = Label(self.window, text=message)
+        label.grid(column=0, row=0, columnspan=6)
 
     def update_board(self, game_board):
         self.validate_game_board_update(game_board)
@@ -137,3 +150,10 @@ class GraphicalView(AmoebaView, AmoebaAgent):
 
     def display_game_state(self, game_board):
         self.board_update_queue.put(game_board)
+
+    def game_ended(self, winner: Player):
+        if winner != Player.NOBODY:
+            text = 'Game ended! Winner is %s' % (winner.name)
+        else:
+            text = 'Game ended! It is a draw'
+        self.message_queue.put(text)
