@@ -62,6 +62,7 @@ class BoardCell:
                 self.drawX()
             elif new_symbol == Symbol.O:
                 self.drawO()
+            self.symbol = new_symbol
 
     def drawX(self):
         self.canvas.create_line(2, 2, self.symbol_size, self.symbol_size)
