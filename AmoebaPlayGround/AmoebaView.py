@@ -4,11 +4,12 @@ from tkinter import *
 
 from AmoebaPlayGround.Amoeba import Symbol, Player
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
+from AmoebaPlayGround.GameBoard import AmoebaBoard
 
 
 # The display function of a view is called by the AmoebaGame at init time and after every move
 class AmoebaView:
-    def display_game_state(self, game_board):
+    def display_game_state(self, game_board: AmoebaBoard):
         pass
 
     def game_ended(self, winner: Player):
@@ -16,18 +17,18 @@ class AmoebaView:
 
 
 class ConsoleView(AmoebaView):
-    def display_game_state(self, game_board):
-        for line in game_board:
-            for cell in line:
+    def display_game_state(self, game_board: AmoebaBoard):
+        for row in game_board:
+            for cell in row:
                 print(self.get_cell_representation(cell), end='')
             print()
 
-    def get_cell_representation(cell: int):
-        if cell == 0:
+    def get_cell_representation(cell: Symbol):
+        if cell == Symbol.EMPTY:
             return '.'
-        if cell == 1:
+        if cell == Symbol.X:
             return 'x'
-        if cell == -1:
+        if cell == Symbol.O:
             return 'o'
         raise Exception('Unknown cell value')
 
@@ -128,14 +129,14 @@ class GraphicalView(AmoebaView, AmoebaAgent):
         label = Label(self.window, text=message)
         label.grid(column=0, row=0, columnspan=6)
 
-    def update_board(self, game_board):
+    def update_board(self, game_board: AmoebaBoard):
         self.validate_game_board_update(game_board)
         for row_index, row in enumerate(self.game_board):
             for column_index, cell in enumerate(row):
-                new_symbol = Symbol(game_board[row_index, column_index])
+                new_symbol = game_board.get((row_index, column_index))
                 cell.update(new_symbol)
 
-    def validate_game_board_update(self, game_board):
+    def validate_game_board_update(self, game_board: AmoebaBoard):
         if self.board_size != game_board.shape:
             raise Exception("Size of gameboard (%d) does not match size of size of graphical view(%d)" % (
                 game_board.shape, self.board_size))
