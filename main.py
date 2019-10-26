@@ -1,4 +1,4 @@
-from AmoebaPlayGround.AmoebaAgent import ConsoleAgent
+from AmoebaPlayGround.AmoebaAgent import ConsoleAgent, RandomAgent
 from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
 from AmoebaPlayGround.AmoebaView import GraphicalView
 
@@ -9,5 +9,5 @@ graphicalView = GraphicalView((10, 10))
 consoleAgent = ConsoleAgent()
 # view = ConsoleView()
 
-trainer = AmoebaTrainer(graphicalView, graphicalView)
+trainer = AmoebaTrainer(graphicalView, RandomAgent())
 trainer.train(1, map_size=(10, 10), view=graphicalView)

@@ -1,44 +1,25 @@
-from enum import Enum
+import copy
 
-import numpy as np
+from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 
-
-class Player(Enum):
-    X = 1
-    O = -1
-    NOBODY = 0
-
-    def get_other_player(self):
-        if self == Player.X:
-            return Player.O
-        else:
-            return Player.X
-
-
-class Symbol(Enum):
-    X = 1
-    O = -1
-    EMPTY = 0
 
 class AmoebaGame:
     def __init__(self, map_size, view=None):
         self.view = view
         if len(map_size) != 2:
             raise Exception('Map must be two dimensional but found shape %s' % (map_size))
-        self.map = np.zeros(map_size, dtype=int)
+        self.map = AmoebaBoard(map_size, perspective=Player.X)
         self.reset()
 
-    def init_map(self, map_size):
-        self.map = np.zeros(map_size, dtype=int)
-        self.place_initial_symbol(map_size)
+    def init_map(self):
+        self.map.reset()
+        self.place_initial_symbol()
 
-    def place_initial_symbol(self, map_size):
-        middle_of_map_y = round(map_size[0] / 2)
-        middle_of_map_x = round(map_size[0] / 2)
-        self.map[middle_of_map_x][middle_of_map_y] = 1
+    def place_initial_symbol(self):
+        self.map.set(self.map.get_middle_of_map_index(), Symbol.X)
 
     def reset(self):
-        self.init_map(self.map.shape)
+        self.init_map()
         self.next_player = Player.O
         self.history = []
         self.winner = None
@@ -47,17 +28,15 @@ class AmoebaGame:
             self.view.display_game_state(self.map)
 
     def step(self, action):
-        player_symbol = self.get_symbol_value_of_next_player()
-        if self.map[action[0], action[1]] != Symbol.EMPTY.value:
+        player_symbol = self.next_player.get_symbol()
+        if not self.map.is_cell_empty(action):
             raise Exception('Trying to place symbol in position already occupied')
-        self.map[action[0], action[1]] = player_symbol
+        self.map.set(action, player_symbol)
         self.history.append(action)
         self.num_steps += 1
         self.next_player = self.next_player.get_other_player()
         if self.view != None:
             self.view.display_game_state(self.map)
-
-
 
     def has_game_ended(self):
         last_action = self.history[-1]
@@ -81,16 +60,16 @@ class AmoebaGame:
             self.view.game_ended(Player.NOBODY)
         return is_draw
 
-
     def is_map_full(self):
-        return self.num_steps == self.map.size
+        return self.num_steps == self.map.get_size()
 
     def is_there_winning_line_in_direction(self, y_start, x_start, y_direction, x_direction):
         # ....x....
         # only 4 places in each direction count in determining if the new move created a winning condition of
         # a five figure long line
         search_length = 9
-        player_symbol = -1 * self.get_symbol_value_of_next_player()
+        player_symbol = self.next_player.get_other_player().get_symbol()  # this is ugly, get_other_player is needed
+        # because this function is evaluated AFTER the move
         line_length = 0
         for line_index in range(0, search_length):
             # depending on the direction of the line being searched direction may be 0 meaning the coordinate does
@@ -99,7 +78,7 @@ class AmoebaGame:
             y_offset = line_index * y_direction
             y = y_start + y_offset
             x = x_start + x_offset
-            if self.is_within_bounds(y, x) and self.map[y, x] == player_symbol:
+            if self.map.is_within_bounds((y, x)) and self.map.get((y, x)) == player_symbol:
                 line_length += 1
             else:
                 line_length = 0
@@ -107,14 +86,8 @@ class AmoebaGame:
                 return True
         return False
 
-    def is_within_bounds(self, y, x):
-        return 0 <= y and y < self.map.shape[0] and 0 <= x and x < self.map.shape[1]
-
-    def get_symbol_value_of_next_player(self):
-        return Symbol.X.value if self.next_player == Player.X else Symbol.O.value
 
     def get_map_for_next_player(self):
-        if self.next_player == Player.X:
-            return self.map
-        else:
-            return self.map * (-1)
+        map_to_return = copy.copy(self.map)
+        map_to_return.perspective = self.next_player
+        return map_to_return
