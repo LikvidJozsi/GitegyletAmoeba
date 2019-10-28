@@ -1,10 +1,12 @@
 from AmoebaPlayGround.Amoeba import AmoebaGame, Player
+from AmoebaPlayGround.RewardCalculator import PolicyGradients
 
 
 class AmoebaTrainer:
-    def __init__(self, x_agent, o_agent):
+    def __init__(self, x_agent, o_agent, reward_calculator=PolicyGradients()):
         self.x_agent = x_agent
         self.o_agent = o_agent
+        self.reward_calculator = reward_calculator
 
     def init_games(self, batch_size, map_size, view):
         games = []
@@ -15,6 +17,9 @@ class AmoebaTrainer:
     def train(self, batch_size=1, map_size=(8, 8), view=None):
         games = self.init_games(batch_size, map_size, view)
         games = self.play_all_games(games)
+        training_samples = self.reward_calculator.get_training_data(games)
+        for training_sample in training_samples:
+            print(training_sample)
         # TODO training
         # 1. play_all_games is already written but there is no neural network agent implementation yet. Ideas for it:
         #    - outputs size same as input size each output feature is the probability of making a move in that cell(non empty cells are ignored)
@@ -24,9 +29,7 @@ class AmoebaTrainer:
         #      new tactics
         #    - this algorithm can be referred to as monte carlo tree search because putting monte carlo in an algorithm has the same effect as
         #      painting flames on a car
-        # 2. rewards could be calculated in diffent ways, policy gradients q values, q values with heuristics etc, there should be a dedicated
-        # interface that allows rapidly changing these. This interface is given some games, and returns a list of state, action, reward comobs.
-        # It does not have to return this comobo for every move in the game. It also does not matter which game a combo belonged to (i hope)
+            # 2. DONE, could still be extended with different reward calculation methods in the future, like heuristics
         # 3. these combos, lets call them training points can be fed into the network for supervised training. Questions:
         #    - does it need more than one epoch?
         #    - should only the latest batch of games be fed, or earlier ones too?
@@ -48,7 +51,7 @@ class AmoebaTrainer:
             active_games = [game for game in active_games if not game in finished_games]
         return finished_games
 
-    def get_maps_of_games(selfl, games):
+    def get_maps_of_games(self, games):
         maps = []
         for game in games:
             maps.append(game.get_map_for_next_player())
