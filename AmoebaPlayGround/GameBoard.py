@@ -82,6 +82,8 @@ class AmoebaBoard:
 
     def get_numeric_representation(self):
         if self.perspective == Player.X:
-            return np.array(list(map(lambda cell: cell.value, self.cells)))
+            mapper = np.vectorize(lambda cell: cell.value)
+            return mapper(self.cells)
         else:
-            return np.array(list(map(lambda cell: cell.value * (-1), self.cells)))
+            mapper = np.vectorize(lambda cell: cell.value * (-1))
+            return mapper(self.cells)
