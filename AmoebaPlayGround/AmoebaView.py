@@ -146,9 +146,6 @@ class GraphicalView(AmoebaView, AmoebaAgent):
         self.move_entered_event.wait()
         return [self.clicked_cell, ]
 
-    def train(self, game_board, played_action, reward):
-        pass
-
     def display_game_state(self, game_board):
         self.board_update_queue.put(game_board)
 
