@@ -1,7 +1,14 @@
 import copy
+from typing import List
 
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 
+
+class Move:
+    def __init__(self, board_state, step, player: Player):
+        self.board_state = board_state
+        self.step = step
+        self.player = player
 
 class AmoebaGame:
     def __init__(self, map_size, view=None):
@@ -24,7 +31,7 @@ class AmoebaGame:
         self.history = []
         self.winner = None
         self.num_steps = 1
-        if self.view != None:
+        if self.view is not None:
             self.view.display_game_state(self.map)
 
     def step(self, action):
@@ -35,8 +42,24 @@ class AmoebaGame:
         self.history.append(action)
         self.num_steps += 1
         self.next_player = self.next_player.get_other_player()
-        if self.view != None:
+        if self.view is not None:
             self.view.display_game_state(self.map)
+
+    def get_last_moves(self, number_of_steps: int) -> List[Move]:
+        moves = []
+        map = copy.deepcopy(self.map)
+        if len(self.history) < number_of_steps:
+            number_of_steps = len(self.history)
+
+        player = self.next_player.get_other_player()
+        for index in range(number_of_steps):
+            step = self.history[len(self.history) - index - 1]
+            map.set(step, Symbol.EMPTY)
+            map.perspective = player
+            move = Move(map.get_numeric_representation(), step, player)
+            moves.append(move)
+            player = player.get_other_player()
+        return moves
 
     def has_game_ended(self):
         last_action = self.history[-1]
@@ -86,8 +109,8 @@ class AmoebaGame:
                 return True
         return False
 
-
     def get_map_for_next_player(self):
         map_to_return = copy.copy(self.map)
         map_to_return.perspective = self.next_player
         return map_to_return
+

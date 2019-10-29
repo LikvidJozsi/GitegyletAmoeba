@@ -39,7 +39,6 @@ class ConsoleView(AmoebaView):
             print('Game ended! It is a draw')
 
 
-
 class BoardCell:
     def __init__(self, window, row, column, symbol_size):
         self.symbol = Symbol.EMPTY
