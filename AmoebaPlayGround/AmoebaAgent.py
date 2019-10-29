@@ -1,16 +1,18 @@
 import math
 import random
+from typing import List
 
 import numpy as np
 
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol
+from AmoebaPlayGround.RewardCalculator import TrainingSample
 
 
 class AmoebaAgent:
     def get_step(self, game_boards):
         pass
 
-    def train(self, game_board, played_action, reward):
+    def train(self, training_samples: List[TrainingSample]):
         pass
 
 

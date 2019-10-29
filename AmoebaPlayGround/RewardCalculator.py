@@ -19,6 +19,13 @@ class TrainingSample:
     def __str__(self):
         return str(self.step) + " " + str(self.reward)
 
+    def unpack(training_samples: List['TrainingSample']):
+        board_states = list(map(lambda sample: sample.board_state, training_samples))
+        steps = list(map(lambda sample: sample.step, training_samples))
+        rewards = list(map(lambda sample: sample.reward, training_samples))
+        return board_states, steps, rewards
+
+
 
 class PolicyGradients(RewardCalculator):
     def __init__(self, discount_factor=0.8, reward_for_win=1, reward_for_loss=-1,
