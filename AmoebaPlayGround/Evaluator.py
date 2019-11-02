@@ -51,7 +51,7 @@ class EloEvaluator(Evaluator):
                 games_draw += 1
         return games_x_won, games_o_won, games_draw
 
-    def set_reference_agent(self, agent: AmoebaAgent, rating):
+    def set_reference_agent(self, agent: AmoebaAgent, rating=1000):
         self.reference_agent = agent
         self.reference_agent_rating = rating
 

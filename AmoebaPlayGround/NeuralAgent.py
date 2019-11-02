@@ -120,4 +120,6 @@ class NeuralNetwork(AmoebaAgent):
         input, output, weights = TrainingSample.unpack(training_samples)
         input = np.expand_dims(np.array(input), axis=3)
         output = self.one_hot_encode_outputs(output)
-        self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=1, shuffle=True)
+        with self.graph.as_default():
+            with self.session.as_default():
+                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=1, shuffle=True)

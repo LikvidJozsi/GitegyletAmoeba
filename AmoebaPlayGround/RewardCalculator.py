@@ -29,13 +29,14 @@ class TrainingSample:
 
 class PolicyGradients(RewardCalculator):
     def __init__(self, discount_factor=0.8, reward_for_win=1, reward_for_loss=-1,
-                 reward_for_tie=-0.5, reward_cutoff_threshold=0.05, teach_with_draws=True):
+                 reward_for_tie=-0.5, reward_cutoff_threshold=0.05, teach_with_draws=True, teach_with_losses=False):
         self.discount_factor = discount_factor
         self.reward_for_win = reward_for_win
         self.reward_for_loss = reward_for_loss
         self.reward_for_tie = reward_for_tie
         self.reward_cutoff_threshold = reward_cutoff_threshold
         self.teach_with_draws = teach_with_draws
+        self.teach_with_losses = teach_with_losses
 
     def get_training_data(self, games: List[AmoebaGame]) -> List[TrainingSample]:
         training_samples = []
@@ -52,11 +53,11 @@ class PolicyGradients(RewardCalculator):
         elif winner != Player.NOBODY:
             winner_moves = filter(lambda move: move.player == winner, moves)
             winner_samples = self._get_training_samples(winner_moves, self.reward_for_win)
+            if self.teach_with_losses:
+                loser_moves = filter(lambda move: move.player != winner, moves)
+                loser_samples = self._get_training_samples(loser_moves, self.reward_for_loss)
+                winner_samples.extend(loser_samples)
 
-            loser_moves = filter(lambda move: move.player != winner, moves)
-            loser_samples = self._get_training_samples(loser_moves, self.reward_for_loss)
-
-            winner_samples.extend(loser_samples)
             return winner_samples
         return []
 
