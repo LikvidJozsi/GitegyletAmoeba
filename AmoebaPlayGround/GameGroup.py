@@ -1,7 +1,7 @@
 from AmoebaPlayGround.Amoeba import AmoebaGame, Player
 
 class GameGroup:
-    def __init__(self, batch_size, map_size, view, x_agent, o_agent):
+    def __init__(self, batch_size, map_size, x_agent, o_agent, view=None):
         self.x_agent = x_agent
         self.o_agent = o_agent
         self.games = []

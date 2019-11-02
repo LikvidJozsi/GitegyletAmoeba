@@ -10,7 +10,7 @@ class AmoebaTrainer:
     def train(self, batch_size=1, map_size=(8, 8), view=None, num_episodes=1):
         for episode_index in range(num_episodes):
             print('Episode %d' % episode_index)
-            game_group = GameGroup(batch_size, map_size, view, self.x_agent, self.o_agent)  # TODO swap x and o agents
+            game_group = GameGroup(batch_size, map_size, self.x_agent, self.o_agent, view)  # TODO swap x and o agents
             games = game_group.play_all_games()
             training_samples = self.reward_calculator.get_training_data(games)
             agents_to_train = self.get_agents_to_train()
