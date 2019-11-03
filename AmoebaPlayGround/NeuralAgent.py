@@ -1,18 +1,53 @@
+import glob
+import os
 from typing import List
 
+import keras
 import numpy as np
 from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten
 from keras.models import Model
+import tensorflow as tf
 
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol
 from AmoebaPlayGround.RewardCalculator import TrainingSample
 
+models_folder = 'Models/'
 
 class NeuralNetwork(AmoebaAgent):
-    def __init__(self, board_size):
-        self.board_size = board_size
-        self.model: Model = self.create_model()
+    def __init__(self, board_size=None, model_name=None, load_latest_model=False):
+        if board_size is None and model_name is None and not load_latest_model:
+            raise Exception('board size, file path and load latest model cannot both be None/False')
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            self.session = tf.Session()
+            with self.session.as_default():
+                if load_latest_model:
+                    self.get_latest_model()
+                else:
+                    if model_name is None:
+                        self.board_size = board_size
+                        self.model: Model = self.create_model()
+                    else:
+                        self.load_model(self.get_model_file_path(model_name))
+
+    def get_latest_model(self):
+        list_of_files = glob.glob(os.path.join(models_folder, '*.h5'))
+        latest_file = max(list_of_files, key=os.path.getctime)
+        self.load_model(latest_file)
+
+    def load_model(self, file_path):
+        self.model: Model = keras.models.load_model(file_path)
+        self.board_size = self.model.get_layer(index=0).output_shape[1:3]
+
+    def get_model_file_path(self, model_name):
+        return os.path.join(models_folder, model_name + '.h5')
+
+    def save(self, model_name):
+        with self.graph.as_default():
+            with self.session.as_default():
+                self.model.save(self.get_model_file_path(model_name))
+
 
     def create_model(self):
         input = Input(shape=self.board_size + (1,))
@@ -59,7 +94,9 @@ class NeuralNetwork(AmoebaAgent):
 
     def get_model_output(self, game_boards: List[AmoebaBoard]):
         formatted_input = self.format_input(game_boards)
-        output = self.model.predict(formatted_input, batch_size=32)
+        with self.graph.as_default():
+            with self.session.as_default():
+                output = self.model.predict(formatted_input, batch_size=32)
         # disclaimer: output has only one spatial dimension, the map is flattened
         return output
 
@@ -83,4 +120,6 @@ class NeuralNetwork(AmoebaAgent):
         input, output, weights = TrainingSample.unpack(training_samples)
         input = np.expand_dims(np.array(input), axis=3)
         output = self.one_hot_encode_outputs(output)
-        self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=1, shuffle=True)
+        with self.graph.as_default():
+            with self.session.as_default():
+                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=1, shuffle=True)

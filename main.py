@@ -1,5 +1,7 @@
 from AmoebaPlayGround.AmoebaAgent import ConsoleAgent, RandomAgent
 from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
+from AmoebaPlayGround.Evaluator import EloEvaluator
+from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol
 from AmoebaPlayGround.NeuralAgent import NeuralNetwork
 
 # graphicalView = GraphicalView((10, 10))
@@ -10,4 +12,4 @@ consoleAgent = ConsoleAgent()
 # view = ConsoleView()
 
 trainer = AmoebaTrainer(NeuralNetwork((10, 10)), RandomAgent())
-trainer.train(5, map_size=(10, 10), view=None)
+trainer.train(batch_size=1000, map_size=(10, 10), view=None, num_episodes=5)
