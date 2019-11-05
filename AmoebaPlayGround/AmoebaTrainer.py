@@ -1,6 +1,6 @@
 from AmoebaPlayGround.Evaluator import EloEvaluator
-from AmoebaPlayGround.RewardCalculator import PolicyGradients
 from AmoebaPlayGround.GameGroup import GameGroup
+from AmoebaPlayGround.RewardCalculator import PolicyGradients
 
 
 class AmoebaTrainer:
@@ -16,9 +16,9 @@ class AmoebaTrainer:
         evaluator = EloEvaluator(map_size)
         evaluator.set_reference_agent(self.teaching_agent)
         for episode_index in range(num_episodes):
-            print('Episode %d' % episode_index)
+            print('\nEpisode %d:' % episode_index)
             game_group = GameGroup(batch_size, map_size, self.learning_agent, self.teaching_agent,
-                                   view)  # TODO swap x and o agents
+                                   view, log_progress=True)  # TODO swap x and o agents
             games = game_group.play_all_games()
             training_samples = self.reward_calculator.get_training_data(games)
             self.learning_agent.train(training_samples)
