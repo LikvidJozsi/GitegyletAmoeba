@@ -4,9 +4,10 @@ from typing import List
 
 import keras
 import numpy as np
+import tensorflow as tf
 from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten
 from keras.models import Model
-import tensorflow as tf
+from keras.optimizers import Adam
 
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol
@@ -59,7 +60,7 @@ class NeuralNetwork(AmoebaAgent):
         dense_1 = Dense(256, activation='relu')(flatten)
         output = Dense(np.prod(self.board_size), activation='softmax')(dense_1)
         model = Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer='adam')
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.01))
         return model
 
     def get_step(self, game_boards: List[AmoebaBoard]):
@@ -122,4 +123,5 @@ class NeuralNetwork(AmoebaAgent):
         output = self.one_hot_encode_outputs(output)
         with self.graph.as_default():
             with self.session.as_default():
-                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=1, shuffle=True)
+                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15, shuffle=True,
+                               verbose=2)

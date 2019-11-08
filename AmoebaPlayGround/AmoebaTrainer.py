@@ -19,9 +19,12 @@ class AmoebaTrainer:
             print('\nEpisode %d:' % episode_index)
             game_group = GameGroup(batch_size, map_size, self.learning_agent, self.teaching_agent,
                                    view, log_progress=True)  # TODO swap x and o agents
+            print('Playing games:')
             games = game_group.play_all_games()
             training_samples = self.reward_calculator.get_training_data(games)
+            print('Training agent:')
             self.learning_agent.train(training_samples)
+            print('Evaluating agent:')
             agent_rating = evaluator.evaluate_agent(self.learning_agent)
             print('Learning agent rating: %f' % agent_rating)
             evaluator.set_reference_agent(self.learning_agent, agent_rating)
@@ -32,9 +35,7 @@ class AmoebaTrainer:
         #    - alphago zero used the resnet architecture
         # 2. DONE, could still be extended with different reward calculation methods in the future, like heuristics
         # 3. There is a basic neural network implementation. Remaining questions:
-        #    - does it need more than one epoch?
         #    - should only the latest batch of games be fed, or earlier ones too?
-        # TODO evaluation
-        # 4. evalutating the new network should be done by having it play multiple games against previous versions, but could there be a way to provide
-        #    an absolute value of performance instead of a relative one (someting like how chess player ratings work maybe)?
-        # These 4 steps are needed to get the full workflow of learning going which would be the second phase of the homework
+            # 4. evalutating the new network is be done by having it play multiple games against the previous version, the
+            #    performance of the agent is quantified according to the Elo rating system which calcualtes a rating from
+            #    the winrate of the agent and the rating of the previous version

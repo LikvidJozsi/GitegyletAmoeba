@@ -27,7 +27,7 @@ class AmoebaGame:
 
     def reset(self):
         self.init_map()
-        self.next_player = Player.O
+        self.previous_player = Player.X
         self.history = []
         self.winner = None
         self.num_steps = 1
@@ -35,13 +35,14 @@ class AmoebaGame:
             self.view.display_game_state(self.map)
 
     def step(self, action):
-        player_symbol = self.next_player.get_symbol()
+        current_player = self.previous_player.get_other_player()
+        player_symbol = current_player.get_symbol()
         if not self.map.is_cell_empty(action):
             raise Exception('Trying to place symbol in position already occupied')
         self.map.set(action, player_symbol)
         self.history.append(action)
         self.num_steps += 1
-        self.next_player = self.next_player.get_other_player()
+        self.previous_player = current_player
         if self.view is not None:
             self.view.display_game_state(self.map)
 
@@ -51,7 +52,7 @@ class AmoebaGame:
         if len(self.history) < number_of_steps:
             number_of_steps = len(self.history)
 
-        player = self.next_player.get_other_player()
+        player = self.previous_player
         for index in range(number_of_steps):
             step = self.history[len(self.history) - index - 1]
             map.set(step, Symbol.EMPTY)
@@ -74,13 +75,13 @@ class AmoebaGame:
                       self.is_there_winning_line_in_direction(y_start=y + 4, x_start=x - 4,
                                                               y_direction=-1, x_direction=1))  # diagonal2
         if player_won:
-            self.winner = self.next_player.get_other_player()
-            if self.view != None:
-                self.view.game_ended(self.winner)
+            self.winner = self.previous_player
             return True
         is_draw = self.is_map_full()
-        if is_draw and self.view != None:
-            self.view.game_ended(Player.NOBODY)
+        if is_draw:
+            self.winner = Player.NOBODY
+        if (player_won or is_draw) and self.view != None:
+            self.view.game_ended(self.winner)
         return is_draw
 
     def is_map_full(self):
@@ -91,8 +92,7 @@ class AmoebaGame:
         # only 4 places in each direction count in determining if the new move created a winning condition of
         # a five figure long line
         search_length = 9
-        player_symbol = self.next_player.get_other_player().get_symbol()  # this is ugly, get_other_player is needed
-        # because this function is evaluated AFTER the move
+        player_symbol = self.previous_player.get_symbol()
         line_length = 0
         for line_index in range(0, search_length):
             # depending on the direction of the line being searched direction may be 0 meaning the coordinate does
@@ -111,6 +111,6 @@ class AmoebaGame:
 
     def get_map_for_next_player(self):
         map_to_return = copy.copy(self.map)
-        map_to_return.perspective = self.next_player
+        map_to_return.perspective = self.previous_player.get_other_player()
         return map_to_return
 

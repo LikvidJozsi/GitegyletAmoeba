@@ -48,7 +48,7 @@ class GameGroup:
                 progress = 1
                 status = "Done...\r\n"
             block = int(round(barLength * progress))
-            text = "\rPlaying games: [{0}] {1}% {2}".format("#" * block + "-" * (barLength - block), progress * 100,
-                                                            status)
+            text = "\r[{0}] {1}% {2}".format("#" * block + "-" * (barLength - block), progress * 100,
+                                             status)
             sys.stdout.write(text)
             sys.stdout.flush()
