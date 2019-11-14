@@ -79,11 +79,3 @@ class AmoebaBoard:
     def get_middle_of_map_index(self):
         middle_of_map_index = round(self.shape[0] / 2), round(self.shape[1] / 2)
         return middle_of_map_index
-
-    def get_numeric_representation(self):
-        if self.perspective == Player.X:
-            mapper = np.vectorize(lambda cell: cell.value)
-            return mapper(self.cells)
-        else:
-            mapper = np.vectorize(lambda cell: cell.value * (-1))
-            return mapper(self.cells)

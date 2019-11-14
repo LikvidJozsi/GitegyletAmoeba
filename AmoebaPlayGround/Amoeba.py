@@ -57,7 +57,7 @@ class AmoebaGame:
             step = self.history[len(self.history) - index - 1]
             map.set(step, Symbol.EMPTY)
             map.perspective = player
-            move = Move(map.get_numeric_representation(), step, player)
+            move = Move(copy.deepcopy(map), step, player)
             moves.append(move)
             player = player.get_other_player()
         return moves

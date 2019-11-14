@@ -35,7 +35,7 @@ class GameGroup:
         return maps
 
     def get_next_agent(self, game):
-        if game.next_player == Player.X:
+        if game.previous_player == Player.X:
             return self.x_agent
         else:
             return self.o_agent

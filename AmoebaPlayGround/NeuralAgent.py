@@ -7,10 +7,10 @@ import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import SGD
 
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
-from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol
+from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 from AmoebaPlayGround.RewardCalculator import TrainingSample
 
 models_folder = 'Models/'
@@ -51,16 +51,16 @@ class NeuralNetwork(AmoebaAgent):
 
 
     def create_model(self):
-        input = Input(shape=self.board_size + (1,))
-        conv_1 = Conv2D(16, kernel_size=(9, 9), activation='relu', padding='same')(input)
-        conv_2 = Conv2D(32, kernel_size=(3, 3), strides=(2, 2), activation='relu', padding='same')(conv_1)
+        input = Input(shape=self.board_size + (2,))
+        conv_1 = Conv2D(32, kernel_size=(9, 9), activation='relu', padding='same')(input)
+        conv_2 = Conv2D(64, kernel_size=(3, 3), strides=(2, 2), activation='relu', padding='same')(conv_1)
         pooling = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(conv_2)
-        conv_3 = Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same')(pooling)
+        conv_3 = Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same')(pooling)
         flatten = Flatten()(conv_3)
         dense_1 = Dense(256, activation='relu')(flatten)
         output = Dense(np.prod(self.board_size), activation='softmax')(dense_1)
         model = Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.01))
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.4))
         return model
 
     def get_step(self, game_boards: List[AmoebaBoard]):
@@ -104,8 +104,22 @@ class NeuralNetwork(AmoebaAgent):
     def format_input(self, game_boards: List[AmoebaBoard]):
         numeric_input = []
         for game_board in game_boards:
-            numeric_input.append(game_board.get_numeric_representation())
-        return np.expand_dims(np.array(numeric_input), axis=3)
+            numeric_input.append(self.one_hot_encode_input(game_board))
+        return np.array(numeric_input)
+
+    def one_hot_encode_input(self, input):
+        numeric_representation = np.zeros(input.shape + (2,))
+        for row_index, row in enumerate(input.cells):
+            for column_index, cell in enumerate(row):
+                if input.perspective == Player.X:
+                    dimension_for_x = 0
+                else:
+                    dimension_for_x = 1
+                if cell == Symbol.X:
+                    numeric_representation[row_index, column_index, dimension_for_x] = 1
+                elif cell == Symbol.O:
+                    numeric_representation[row_index, column_index, 1 - dimension_for_x] = 1
+        return numeric_representation
 
     def one_hot_encode_output(self, output):
         expanded_dims = np.zeros(np.prod(self.board_size))
@@ -119,9 +133,10 @@ class NeuralNetwork(AmoebaAgent):
 
     def train(self, training_samples: List[TrainingSample]):
         input, output, weights = TrainingSample.unpack(training_samples)
-        input = np.expand_dims(np.array(input), axis=3)
         output = self.one_hot_encode_outputs(output)
+        print('number of training samples: ' + str(len(training_samples)))
+        input = np.array([self.one_hot_encode_input(x) for x in input])
         with self.graph.as_default():
             with self.session.as_default():
-                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15, shuffle=True,
-                               verbose=2)
+                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=10, shuffle=True,
+                               verbose=2, batch_size=32)
