@@ -7,6 +7,7 @@ from AmoebaPlayGround.NeuralAgent import NeuralNetwork
 # demo
 #consoleAgent = ConsoleAgent()
 # view = ConsoleView()
-agent = NeuralNetwork((10, 10))
+size = (10, 10)
+agent = NeuralNetwork(size)
 trainer = AmoebaTrainer(agent)
-trainer.train(batch_size=1000, map_size=(10, 10), view=None, num_episodes=5)
+trainer.train(batch_size=1000, map_size=size, view=None, num_episodes=5)
