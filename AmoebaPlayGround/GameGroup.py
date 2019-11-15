@@ -36,9 +36,9 @@ class GameGroup:
 
     def get_next_agent(self, game):
         if game.previous_player == Player.X:
-            return self.x_agent
-        else:
             return self.o_agent
+        else:
+            return self.x_agent
 
     def print_progress(self, progress):
         if self.log_progress:
