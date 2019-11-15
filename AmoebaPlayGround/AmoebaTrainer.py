@@ -1,14 +1,18 @@
+from AmoebaPlayGround import AmoebaAgent
 from AmoebaPlayGround.Evaluator import EloEvaluator
 from AmoebaPlayGround.GameGroup import GameGroup
+from AmoebaPlayGround.NeuralAgent import NeuralNetwork
 from AmoebaPlayGround.RewardCalculator import PolicyGradients
 
 
 class AmoebaTrainer:
     def __init__(self, learning_agent, teaching_agent=None, reward_calculator=PolicyGradients()):
-        self.learning_agent = learning_agent
+        self.learning_agent: AmoebaAgent = learning_agent
         if teaching_agent is None:
+            self.self_play = True
             self.teaching_agent = learning_agent
         else:
+            self.self_play = False
             self.teaching_agent = teaching_agent
         self.reward_calculator = reward_calculator
 
@@ -17,6 +21,10 @@ class AmoebaTrainer:
         evaluator.set_reference_agent(self.teaching_agent)
         for episode_index in range(num_episodes):
             print('\nEpisode %d:' % episode_index)
+            if self.self_play:
+                self.teaching_agent.save('reference_agent')
+                self.learning_agent = NeuralNetwork(model_name='reference_agent')
+                # TODO have a factory method so neuralagent doesn't have to be hardcoded
             game_group = GameGroup(batch_size, map_size, self.learning_agent, self.teaching_agent,
                                    view, log_progress=True)  # TODO swap x and o agents
             print('Playing games:')
@@ -27,7 +35,9 @@ class AmoebaTrainer:
             print('Evaluating agent:')
             agent_rating = evaluator.evaluate_agent(self.learning_agent)
             print('Learning agent rating: %f' % agent_rating)
-            evaluator.set_reference_agent(self.learning_agent, agent_rating)
+            if self.self_play:
+                evaluator.set_reference_agent(self.learning_agent, agent_rating)
+
 
             # 1. There is a basic neural network implementation that is conv -> dense. Further ideas:
         #    - network could be convolution -> dense -> deconvolution or convolution -> locally connected, or simply convolution -> dense or no
