@@ -1,9 +1,10 @@
 import math
 
 from AmoebaPlayGround.GameGroup import GameGroup
-from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
+from AmoebaPlayGround.AmoebaAgent import AmoebaAgent, RandomAgent
 from AmoebaPlayGround.GameBoard import Player
 
+fix_reference_agents = {'RandomAgent': RandomAgent()}
 
 class Evaluator:
     def evaluate_agent(self, agent: AmoebaAgent):
@@ -21,9 +22,27 @@ class EloEvaluator(Evaluator):
         self.map_size = map_size
 
     def evaluate_agent(self, agent: AmoebaAgent):
+        self.evaluate_against_fixed_references(agent)
+        return self.evaluate_against_agent(agent_to_evaluate=agent, reference_agent=self.reference_agent)
+
+    def evaluate_against_fixed_references(self, agent_to_evaluate):
+        for agent_name, agent in fix_reference_agents.items():
+            score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
+                                                  reference_agent=agent)
+            print('Score against %s: %f' % (agent_name, score))
+
+    def evaluate_against_agent(self, agent_to_evaluate, reference_agent):
+        agent_expected_score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
+                                                             reference_agent=reference_agent)
+        agent_rating = self.reference_agent_rating - 400 * math.log10(1 / agent_expected_score - 1)
+        return agent_rating
+
+    def calculate_expected_score(self, agent_to_evaluate, reference_agent):
         game_group_size = int(self.evaluation_match_number / 2)
-        game_group_reference_starts = GameGroup(game_group_size, self.map_size, self.reference_agent, agent)
-        game_group_agent_started = GameGroup(game_group_size, self.map_size, agent, self.reference_agent)
+        game_group_reference_starts = GameGroup(game_group_size, self.map_size,
+                                                reference_agent, agent_to_evaluate)
+        game_group_agent_started = GameGroup(game_group_size, self.map_size,
+                                             agent_to_evaluate, reference_agent)
         finished_games_reference_started = game_group_reference_starts.play_all_games()
         finished_games_agent_started = game_group_agent_started.play_all_games()
 
@@ -34,8 +53,7 @@ class EloEvaluator(Evaluator):
         draw_games += draw + 1
         all_games_num = games_agent_won + games_reference_won + draw_games
         agent_expected_score = games_agent_won / all_games_num + 0.5 * draw_games / all_games_num
-        agent_rating = self.reference_agent_rating - 400 * math.log10(1 / agent_expected_score - 1)
-        return agent_rating
+        return agent_expected_score
 
     def get_win_statistics(self, games):
         games_x_won = 0
