@@ -5,7 +5,7 @@ from typing import List
 import keras
 import numpy as np
 import tensorflow as tf
-from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten
+from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Dropout
 from keras.models import Model
 from keras.optimizers import SGD
 
@@ -14,6 +14,7 @@ from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 from AmoebaPlayGround.RewardCalculator import TrainingSample
 
 models_folder = 'Models/'
+
 
 class NeuralNetwork(AmoebaAgent):
     def __init__(self, board_size=None, model_name=None, load_latest_model=False):
@@ -49,18 +50,23 @@ class NeuralNetwork(AmoebaAgent):
             with self.session.as_default():
                 self.model.save(self.get_model_file_path(model_name))
 
-
     def create_model(self):
         input = Input(shape=self.board_size + (2,))
-        conv_1 = Conv2D(32, kernel_size=(9, 9), activation='relu', padding='same')(input)
-        conv_2 = Conv2D(64, kernel_size=(3, 3), strides=(2, 2), activation='relu', padding='same')(conv_1)
+        conv_1 = Conv2D(32, kernel_size=(7, 7), activation='relu', padding='same')(input)
+        conv_2 = Conv2D(64, kernel_size=(5, 5), strides=(2, 2), activation='relu', padding='same')(conv_1)
         pooling = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(conv_2)
-        conv_3 = Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same')(pooling)
-        flatten = Flatten()(conv_3)
-        dense_1 = Dense(256, activation='relu')(flatten)
-        output = Dense(np.prod(self.board_size), activation='softmax')(dense_1)
+        conv_3 = Conv2D(64, kernel_size=(5, 5), activation='relu', padding='same')(pooling)
+        conv_4 = Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same')(conv_3)
+        pooling_2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(conv_4)
+        flatten = Flatten()(pooling_2)
+        dense_1 = Dense(128, activation= 'relu')(flatten)
+        dropout_1 = Dropout(0.3)(dense_1)
+        dense_2 = Dense(256, activation='relu')(dropout_1)
+        dropout = Dropout(0.3)(dense_2)
+        output = Dense(np.prod(self.board_size), activation='softmax')(dropout)
         model = Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=1))
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.15))
+
         return model
 
     def get_step(self, game_boards: List[AmoebaBoard]):
@@ -71,7 +77,14 @@ class NeuralNetwork(AmoebaAgent):
         steps = []
         for probabilities, game_board in zip(output, game_boards):
             valid_steps, valid_probabilities = self.get_valid_steps(probabilities, game_board)
-            step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
+
+            if np.random.randint(low=0, high=2) >= 0.4:
+                step_in_1d = valid_steps[np.argmax(valid_probabilities)]
+            else:
+                step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
+
+            #step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
+
             step = self.to_2d(step_in_1d)
             steps.append(step)
         return steps
@@ -138,5 +151,6 @@ class NeuralNetwork(AmoebaAgent):
         input = np.array([self.one_hot_encode_input(x) for x in input])
         with self.graph.as_default():
             with self.session.as_default():
-                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15, shuffle=True,
-                               verbose=2, batch_size=256)
+                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=8, shuffle=True,
+                               verbose=2, batch_size=32)
+

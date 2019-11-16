@@ -11,11 +11,14 @@ class Move:
         self.player = player
 
 class AmoebaGame:
-    def __init__(self, map_size, view=None):
+    def __init__(self, map_size, win_sequence_length, view=None):
         self.view = view
         if len(map_size) != 2:
             raise Exception('Map must be two dimensional but found shape %s' % (map_size))
+        if win_sequence_length >= map_size[0]:
+            raise Exception('Map size is smaller than the length of a winning sequence.')
         self.map = AmoebaBoard(map_size, perspective=Player.X)
+        self.win_sequence_length = win_sequence_length
         self.reset()
 
     def init_map(self):
@@ -105,7 +108,7 @@ class AmoebaGame:
                 line_length += 1
             else:
                 line_length = 0
-            if line_length == 5:
+            if line_length == self.win_sequence_length:
                 return True
         return False
 

@@ -14,16 +14,19 @@ class Evaluator:
 
 
 class EloEvaluator(Evaluator):
-    def __init__(self, map_size, evaluation_match_number=100):
+    def __init__(self, map_size, win_sequence_length, evaluation_match_number=200):
         self.reference_agent = None
         self.reference_agent_rating = None
         self.evaluation_match_number = evaluation_match_number
         self.map_size = map_size
+        self.win_sequence_length = win_sequence_length
 
     def evaluate_agent(self, agent: AmoebaAgent):
         game_group_size = int(self.evaluation_match_number / 2)
-        game_group_reference_starts = GameGroup(game_group_size, self.map_size, self.reference_agent, agent)
-        game_group_agent_started = GameGroup(game_group_size, self.map_size, agent, self.reference_agent)
+        game_group_reference_starts = GameGroup(game_group_size, self.map_size, self.win_sequence_length,
+                                                reference_agent, agent_to_evaluate)
+        game_group_agent_started = GameGroup(game_group_size, self.map_size, self.win_sequence_length,
+                                             agent_to_evaluate, reference_agent)
         finished_games_reference_started = game_group_reference_starts.play_all_games()
         finished_games_agent_started = game_group_agent_started.play_all_games()
 
