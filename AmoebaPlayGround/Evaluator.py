@@ -1,9 +1,20 @@
+# 1. evaluator recieves an agent
+# 2. takes this agent and runs a 1000 games between it and the agent evaluated against ( half one staring half the other)
+# 3. calculates elo rating from the elo rating of the reference agent and the win ratio
+# 4. returns the win ratio and elo rating
+# 5. initially elo of the first agent is 0, what we evaluate against is the previous episode agent
+# future ideas:
+# what if elo rating is not consistent when evaluating against multiple agents?
+
+
+
 import math
 
 from AmoebaPlayGround.GameGroup import GameGroup
-from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
+from AmoebaPlayGround.AmoebaAgent import AmoebaAgent, RandomAgent
 from AmoebaPlayGround.GameBoard import Player
 
+fix_reference_agents = {'RandomAgent': RandomAgent()}
 
 class Evaluator:
     def evaluate_agent(self, agent: AmoebaAgent):
@@ -22,6 +33,22 @@ class EloEvaluator(Evaluator):
         self.win_sequence_length = win_sequence_length
 
     def evaluate_agent(self, agent: AmoebaAgent):
+        self.evaluate_against_fixed_references(agent)
+        return self.evaluate_against_agent(agent_to_evaluate=agent, reference_agent=self.reference_agent)
+
+    def evaluate_against_fixed_references(self, agent_to_evaluate):
+        for agent_name, agent in fix_reference_agents.items():
+            score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
+                                                  reference_agent=agent)
+            print('Score against %s: %f' % (agent_name, score))
+
+    def evaluate_against_agent(self, agent_to_evaluate, reference_agent):
+        agent_expected_score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
+                                                             reference_agent=reference_agent)
+        agent_rating = self.reference_agent_rating - 400 * math.log10(1 / agent_expected_score - 1)
+        return agent_rating
+
+    def calculate_expected_score(self, agent_to_evaluate, reference_agent):
         game_group_size = int(self.evaluation_match_number / 2)
         game_group_reference_starts = GameGroup(game_group_size, self.map_size, self.win_sequence_length,
                                                 reference_agent, agent_to_evaluate)
@@ -37,8 +64,7 @@ class EloEvaluator(Evaluator):
         draw_games += draw + 1
         all_games_num = games_agent_won + games_reference_won + draw_games
         agent_expected_score = games_agent_won / all_games_num + 0.5 * draw_games / all_games_num
-        agent_rating = self.reference_agent_rating - 400 * math.log10(1 / agent_expected_score - 1)
-        return agent_rating
+        return agent_expected_score
 
     def get_win_statistics(self, games):
         games_x_won = 0
@@ -57,11 +83,3 @@ class EloEvaluator(Evaluator):
     def set_reference_agent(self, agent: AmoebaAgent, rating=1000):
         self.reference_agent = agent
         self.reference_agent_rating = rating
-
-# 1. evaluator recieves an agent
-# 2. takes this agent and runs a 1000 games between it and the agent evaluated against ( half one staring half the other)
-# 3. calculates elo rating from the elo rating of the reference agent and the win ratio
-# 4. returns the win ratio and elo rating
-# 5. initially elo of the first agent is 0, what we evaluate against is the previous episode agent
-# future ideas:
-# what if elo rating is not consistent when evaluating against multiple agents?
