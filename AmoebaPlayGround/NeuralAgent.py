@@ -60,7 +60,7 @@ class NeuralNetwork(AmoebaAgent):
         dense_1 = Dense(256, activation='relu')(flatten)
         output = Dense(np.prod(self.board_size), activation='softmax')(dense_1)
         model = Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=1))
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.3))
         return model
 
     def get_step(self, game_boards: List[AmoebaBoard]):
@@ -97,7 +97,7 @@ class NeuralNetwork(AmoebaAgent):
         formatted_input = self.format_input(game_boards)
         with self.graph.as_default():
             with self.session.as_default():
-                output = self.model.predict(formatted_input, batch_size=32)
+                output = self.model.predict(formatted_input, batch_size=256)
         # disclaimer: output has only one spatial dimension, the map is flattened
         return output
 
@@ -139,4 +139,4 @@ class NeuralNetwork(AmoebaAgent):
         with self.graph.as_default():
             with self.session.as_default():
                 self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15, shuffle=True,
-                               verbose=2, batch_size=256)
+                               verbose=2, batch_size=32)
