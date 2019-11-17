@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Dropout
 from keras.models import Model
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
@@ -66,6 +66,7 @@ class NeuralNetwork(AmoebaAgent):
         output = Dense(np.prod(self.board_size), activation='softmax')(dropout)
         model = Model(inputs=input, outputs=output)
         model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.15))
+        #model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.15))
 
         return model
 
