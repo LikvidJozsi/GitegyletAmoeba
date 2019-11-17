@@ -8,7 +8,7 @@ from AmoebaPlayGround.AmoebaAgent import RandomAgent
 # demo
 # consoleAgent = ConsoleAgent()
 # view = ConsoleView()
-from AmoebaPlayGround.RewardCalculator import PolicyGradients
+from AmoebaPlayGround.RewardCalculator import PolicyGradients, PolicyGradientsWithNegativeTeaching
 
 map_size = (8, 8)
 win_sequence_length = 5
@@ -20,13 +20,13 @@ random_agent = RandomAgent()
 trainer_ai_random = AmoebaTrainer(agent, random_agent)
 trainer_aic_random = AmoebaTrainer(counter_agent, random_agent)
 trainer_ai_aic = AmoebaTrainer(agent, counter_agent,
-                               reward_calculator=PolicyGradients(teach_with_losses=False))
+                               reward_calculator=PolicyGradientsWithNegativeTeaching())
 trainer_aic_ai = AmoebaTrainer(counter_agent, agent,
-                               reward_calculator=PolicyGradients(teach_with_losses=False))
+                               reward_calculator=PolicyGradientsWithNegativeTeaching())
 
 
-batch_againt_random = 500
-batch_against_ai = 1000
+batch_againt_random = 1000
+batch_against_ai = 3000
 save_step = 1
 
 

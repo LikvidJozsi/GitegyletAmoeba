@@ -152,6 +152,6 @@ class NeuralNetwork(AmoebaAgent):
         input = np.array([self.one_hot_encode_input(x) for x in input])
         with self.graph.as_default():
             with self.session.as_default():
-                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=8, shuffle=True,
+                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=10, shuffle=True,
                                verbose=2, batch_size=32)
 

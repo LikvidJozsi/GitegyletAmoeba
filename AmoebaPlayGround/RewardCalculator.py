@@ -53,10 +53,10 @@ class PolicyGradients(RewardCalculator):
         elif winner != Player.NOBODY:
             winner_moves = filter(lambda move: move.player == winner, moves)
             winner_samples = self._get_training_samples(winner_moves, self.reward_for_win)
+            samples = winner_samples
+            samples.extend(self._get_loser_training_samples(moves, winner))
 
-            winner_samples.extend(self._get_loser_training_samples(moves, winner))
-
-            return winner_samples
+            return samples
         return []
 
     def _get_loser_training_samples(self, moves, winner):
@@ -94,12 +94,19 @@ class PolicyGradients(RewardCalculator):
 
 
 class PolicyGradientsWithNegativeTeaching(PolicyGradients):
-    def __init__(self):
-        super().__init__(teach_with_losses=True)
+    def __init__(self, nr_of_alternative_steps=2, reward_for_alt_move=1):
+        super().__init__()
+        self.nr_of_alternative_steps = nr_of_alternative_steps
+        self.reward_for_alt_move = reward_for_alt_move
 
     def _get_loser_training_samples(self, moves, winner):
-        # loser_samples = []
-        #
-        # if moves
+        loser_alternative_moves = []
 
-        return super()._get_loser_training_samples(moves, winner)
+        nr_of_relevant = min(2 * self.nr_of_alternative_steps, len(moves))
+        relevant_moves = moves[:nr_of_relevant]
+
+        for winner_move, loser_move in zip(relevant_moves[0::2], relevant_moves[1::2]):
+            loser_alternative_moves.append(Move(loser_move.board_state,
+                                                winner_move.step, loser_move.player))
+
+        return self._get_training_samples(loser_alternative_moves, reward=self.reward_for_alt_move)
