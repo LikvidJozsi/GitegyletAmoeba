@@ -8,14 +8,15 @@
 
 
 
+import collections
 import math
 
-from AmoebaPlayGround.GameGroup import GameGroup
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent, RandomAgent
 from AmoebaPlayGround.GameBoard import Player
+from AmoebaPlayGround.GameGroup import GameGroup
 
-fix_reference_agents = {'RandomAgent': RandomAgent()}
-
+ReferenceAgent = collections.namedtuple('ReferenceAgent', 'name instance evalation_match_number')
+fix_reference_agents = [ReferenceAgent(name='RandomAgent', instance=RandomAgent(), evalation_match_number=100)]
 class Evaluator:
     def evaluate_agent(self, agent: AmoebaAgent):
         pass
@@ -37,19 +38,21 @@ class EloEvaluator(Evaluator):
         return self.evaluate_against_agent(agent_to_evaluate=agent, reference_agent=self.reference_agent)
 
     def evaluate_against_fixed_references(self, agent_to_evaluate):
-        for agent_name, agent in fix_reference_agents.items():
+        for reference_agent in fix_reference_agents:
             score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
-                                                  reference_agent=agent)
-            print('Score against %s: %f' % (agent_name, score))
+                                                  reference_agent=reference_agent.instance,
+                                                  evaluation_match_number=reference_agent.evalation_match_number)
+            print('Score against %s: %f' % (reference_agent.name, score))
 
     def evaluate_against_agent(self, agent_to_evaluate, reference_agent):
         agent_expected_score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
-                                                             reference_agent=reference_agent)
+                                                             reference_agent=reference_agent,
+                                                             evaluation_match_number=self.evaluation_match_number)
         agent_rating = self.reference_agent_rating - 400 * math.log10(1 / agent_expected_score - 1)
         return agent_rating
 
-    def calculate_expected_score(self, agent_to_evaluate, reference_agent):
-        game_group_size = int(self.evaluation_match_number / 2)
+    def calculate_expected_score(self, agent_to_evaluate, reference_agent, evaluation_match_number):
+        game_group_size = int(evaluation_match_number / 2)
         game_group_reference_starts = GameGroup(game_group_size, self.map_size, self.win_sequence_length,
                                                 reference_agent, agent_to_evaluate)
         game_group_agent_started = GameGroup(game_group_size, self.map_size, self.win_sequence_length,
