@@ -1,3 +1,4 @@
+import AmoebaPlayGround.Amoeba as Amoeba
 from AmoebaPlayGround.AmoebaAgent import RandomAgent
 from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
 from AmoebaPlayGround.NeuralAgent import NeuralNetwork
@@ -10,7 +11,7 @@ from AmoebaPlayGround.NeuralAgent import NeuralNetwork
 from AmoebaPlayGround.RewardCalculator import PolicyGradients
 
 map_size = (8, 8)
-win_sequence_length = 5
+Amoeba.win_sequence_length = 5
 
 agent = NeuralNetwork(map_size)
 counter_agent = NeuralNetwork(map_size)
