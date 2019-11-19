@@ -15,6 +15,9 @@ class AmoebaAgent:
     def train(self, training_samples: List[TrainingSample]):
         pass
 
+    def save(self, model_name):
+        pass
+
 
 class ConsoleAgent(AmoebaAgent):
     def get_step(self, game_boards):

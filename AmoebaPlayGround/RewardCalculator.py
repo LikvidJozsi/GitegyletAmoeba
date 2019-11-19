@@ -28,8 +28,8 @@ class TrainingSample:
 
 
 class PolicyGradients(RewardCalculator):
-    def __init__(self, discount_factor=0.8, reward_for_win=1, reward_for_loss=-1,
-                 reward_for_tie=-0.5, reward_cutoff_threshold=0.05, teach_with_draws=True, teach_with_losses=False):
+    def __init__(self, discount_factor=0.7, reward_for_win=1, reward_for_loss=-1,
+                 reward_for_tie=-0.5, reward_cutoff_threshold=0.05, teach_with_draws=False, teach_with_losses=False):
         self.discount_factor = discount_factor
         self.reward_for_win = reward_for_win
         self.reward_for_loss = reward_for_loss
@@ -53,13 +53,18 @@ class PolicyGradients(RewardCalculator):
         elif winner != Player.NOBODY:
             winner_moves = filter(lambda move: move.player == winner, moves)
             winner_samples = self._get_training_samples(winner_moves, self.reward_for_win)
-            if self.teach_with_losses:
-                loser_moves = filter(lambda move: move.player != winner, moves)
-                loser_samples = self._get_training_samples(loser_moves, self.reward_for_loss)
-                winner_samples.extend(loser_samples)
+
+            winner_samples.extend(self._get_loser_training_samples(moves, winner))
 
             return winner_samples
         return []
+
+    def _get_loser_training_samples(self, moves, winner):
+        loser_samples = []
+        if self.teach_with_losses:
+            loser_moves = filter(lambda move: move.player != winner, moves)
+            loser_samples = self._get_training_samples(loser_moves, self.reward_for_loss)
+        return loser_samples
 
     def _get_training_samples(self, moves, reward):
         discounted_reward = reward
@@ -86,3 +91,15 @@ class PolicyGradients(RewardCalculator):
         steps_needed = math.floor(math.log(self.reward_cutoff_threshold, self.discount_factor))
         # multiplied by two because since there are two players it takes rewards get decreased every two turns
         return int(steps_needed * 2)
+
+
+class PolicyGradientsWithNegativeTeaching(PolicyGradients):
+    def __init__(self):
+        super().__init__(teach_with_losses=True)
+
+    def _get_loser_training_samples(self, moves, winner):
+        # loser_samples = []
+        #
+        # if moves
+
+        return super()._get_loser_training_samples(moves, winner)

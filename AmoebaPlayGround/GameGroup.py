@@ -35,10 +35,10 @@ class GameGroup:
         return maps
 
     def get_next_agent(self, game):
-        if game.next_player == Player.X:
-            return self.x_agent
-        else:
+        if game.previous_player == Player.X:
             return self.o_agent
+        else:
+            return self.x_agent
 
     def print_progress(self, progress):
         if self.log_progress:
@@ -48,7 +48,7 @@ class GameGroup:
                 progress = 1
                 status = "Done...\r\n"
             block = int(round(barLength * progress))
-            text = "\rPlaying games: [{0}] {1}% {2}".format("#" * block + "-" * (barLength - block), progress * 100,
-                                                            status)
+            text = "\r[{0}] {1}% {2}".format("#" * block + "-" * (barLength - block), progress * 100,
+                                             status)
             sys.stdout.write(text)
             sys.stdout.flush()
