@@ -34,7 +34,7 @@ We need to decide on the agents used for learning. Currently the only agent that
 agent = NeuralNetwork(map_size)
 random_agent = RandomAgent()
 ```
-Now we need to create an AmoebaTrainer to orchestrate the learning. The RewardCalculator used during learning is configurable, for example PolicyGradients can use losses as deterant learning examples. Currently the only RewardCalculator available is PolicyGradients
+Now we need to create an AmoebaTrainer to orchestrate the learning. The RewardCalculator used during learning is configurable, for example PolicyGradients can use losses as deterrent learning examples. Currently the only RewardCalculator available is PolicyGradients
 ```python
 trainer = AmoebaTrainer(agent, random_agent,
                                reward_calculator=PolicyGradients(teach_with_losses=False))
