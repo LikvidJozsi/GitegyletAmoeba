@@ -1,7 +1,6 @@
+from AmoebaPlayGround.AmoebaAgent import RandomAgent
 from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
 from AmoebaPlayGround.NeuralAgent import NeuralNetwork
-from AmoebaPlayGround.AmoebaAgent import RandomAgent
-
 # graphicalView = GraphicalView((10, 10))
 # game_board = np.array([[0,0,0,0],[0,1,1,1],[-1,-1,-1,0],[0,1,-1,0]])
 # graphicalView.display_game_state(game_board)
@@ -31,9 +30,7 @@ save_step = 1
 
 
 def non_episodic_train(trainer, batch_size):
-    trainer.train(batch_size, map_size=map_size,
-                  win_sequence_length=win_sequence_length,
-                  view=None,
+    trainer.train(batch_size, map_size=map_size, view=None,
                   num_episodes=1)
 
 

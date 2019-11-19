@@ -3,6 +3,7 @@ from typing import List
 
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 
+win_sequence_length = 5
 
 class Move:
     def __init__(self, board_state, step, player: Player):
@@ -11,14 +12,13 @@ class Move:
         self.player = player
 
 class AmoebaGame:
-    def __init__(self, map_size, win_sequence_length, view=None):
+    def __init__(self, map_size, view=None):
         self.view = view
         if len(map_size) != 2:
             raise Exception('Map must be two dimensional but found shape %s' % (map_size))
         if win_sequence_length >= map_size[0]:
             raise Exception('Map size is smaller than the length of a winning sequence.')
         self.map = AmoebaBoard(map_size, perspective=Player.X)
-        self.win_sequence_length = win_sequence_length
         self.reset()
 
     def init_map(self):
@@ -69,13 +69,15 @@ class AmoebaGame:
         last_action = self.history[-1]
         y = last_action[0]
         x = last_action[1]
-        player_won = (self.is_there_winning_line_in_direction(y_start=y - 4, x_start=x + 0,
+        player_won = (self.is_there_winning_line_in_direction(y_start=y - win_sequence_length + 1, x_start=x,
                                                               y_direction=1, x_direction=0) or  # vertical
-                      self.is_there_winning_line_in_direction(y_start=y - 4, x_start=x - 4,
+                      self.is_there_winning_line_in_direction(y_start=y - win_sequence_length + 1,
+                                                              x_start=x - win_sequence_length + 1,
                                                               y_direction=1, x_direction=1) or  # diagonal1
-                      self.is_there_winning_line_in_direction(y_start=y, x_start=x - 4,
+                      self.is_there_winning_line_in_direction(y_start=y, x_start=x - win_sequence_length + 1,
                                                               y_direction=0, x_direction=1) or  # horizontal
-                      self.is_there_winning_line_in_direction(y_start=y + 4, x_start=x - 4,
+                      self.is_there_winning_line_in_direction(y_start=y + win_sequence_length + 1,
+                                                              x_start=x - win_sequence_length + 1,
                                                               y_direction=-1, x_direction=1))  # diagonal2
         if player_won:
             self.winner = self.previous_player
@@ -108,7 +110,7 @@ class AmoebaGame:
                 line_length += 1
             else:
                 line_length = 0
-            if line_length == self.win_sequence_length:
+            if line_length == win_sequence_length:
                 return True
         return False
 

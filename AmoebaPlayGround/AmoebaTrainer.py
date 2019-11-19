@@ -16,8 +16,8 @@ class AmoebaTrainer:
             self.teaching_agent = teaching_agent
         self.reward_calculator = reward_calculator
 
-    def train(self, batch_size=1, map_size=(8, 8), win_sequence_length=5, view=None, num_episodes=1):
-        evaluator = EloEvaluator(map_size, win_sequence_length=win_sequence_length)
+    def train(self, batch_size=1, map_size=(8, 8), view=None, num_episodes=1):
+        evaluator = EloEvaluator(map_size)
         evaluator.set_reference_agent(self.teaching_agent)
         for episode_index in range(num_episodes):
             print('\nEpisode %d:' % episode_index)
@@ -25,7 +25,7 @@ class AmoebaTrainer:
                 self.teaching_agent.save('reference_agent')
                 self.learning_agent = NeuralNetwork(model_name='reference_agent')
                 # TODO have a factory method so neuralagent doesn't have to be hardcoded
-            game_group = GameGroup(batch_size, map_size, win_sequence_length, self.learning_agent, self.teaching_agent,
+            game_group = GameGroup(batch_size, map_size, self.learning_agent, self.teaching_agent,
                                    view, log_progress=True)  # TODO swap x and o agents
             print('Playing games:')
             games = game_group.play_all_games()
