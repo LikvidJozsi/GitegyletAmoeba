@@ -41,8 +41,8 @@ trainer = AmoebaTrainer(agent, random_agent,
 ```
 Now all we need is start training, and the progress will be logged into the console.
 ```python
-games_played_per_episode
- trainer.train(games_played_per_episode, map_size=map_size, view=None,
+games_played_per_episode = 1000
+trainer.train(games_played_per_episode, map_size=map_size, view=None,
                   num_episodes=5)
 ```
 
