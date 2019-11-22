@@ -140,3 +140,16 @@ class NeuralNetwork(AmoebaAgent):
             with self.session.as_default():
                 self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15, shuffle=True,
                                verbose=2, batch_size=32)
+
+    def get_weights(self):
+        with self.graph.as_default():
+            with self.session.as_default():
+                return self.model.get_weights()
+
+    def set_weights(self, weights):
+        with self.graph.as_default():
+            with self.session.as_default():
+                self.model.set_weights(weights)
+
+    def copy_weights_into(self, agent_to_copy_into):
+        agent_to_copy_into.set_weights(self.get_weights())
