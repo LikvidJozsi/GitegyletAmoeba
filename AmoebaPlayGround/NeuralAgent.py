@@ -153,3 +153,6 @@ class NeuralNetwork(AmoebaAgent):
 
     def copy_weights_into(self, agent_to_copy_into):
         agent_to_copy_into.set_weights(self.get_weights())
+
+    def get_name(self):
+        return 'NeuralAgent'

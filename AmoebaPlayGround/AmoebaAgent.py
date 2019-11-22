@@ -18,6 +18,9 @@ class AmoebaAgent:
     def save(self, model_name):
         pass
 
+    def get_name(self):
+        return 'Default Name'
+
 
 class ConsoleAgent(AmoebaAgent):
     def get_step(self, game_boards):
@@ -65,3 +68,6 @@ class RandomAgent(AmoebaAgent):
                 if game_board.is_within_bounds((row, column)) and not game_board.is_cell_empty((row, column)):
                     return True
         return False
+
+    def get_name(self):
+        return 'RandomAgent'

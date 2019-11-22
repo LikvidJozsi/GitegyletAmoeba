@@ -17,16 +17,17 @@ class AmoebaTrainer:
             self.teaching_agents.append(self.learning_agent_with_old_state)
 
     def train(self, batch_size=1, map_size=(8, 8), view=None, num_episodes=1):
+        self.batch_size = batch_size
+        self.map_size = map_size
+        self.view = view
         evaluator = EloEvaluator(map_size)
         evaluator.set_reference_agent(self.learning_agent_with_old_state)
         for episode_index in range(num_episodes):
             print('\nEpisode %d:' % episode_index)
             played_games = []
             for teacher_index, teaching_agent in enumerate(self.teaching_agents):
-                game_group = GameGroup(batch_size, map_size, self.learning_agent, teaching_agent,
-                                       view, log_progress=True)  # TODO swap x and o agents
-                print('Playing games against agent ' + str(teacher_index))
-                played_games.extend(game_group.play_all_games())
+                print('Playing games against ' + teaching_agent.get_name())
+                played_games.extend(self.play_games_between_agents(self.learning_agent, teaching_agent))
             training_samples = self.reward_calculator.get_training_data(played_games)
             if self.self_play:
                 self.learning_agent.copy_weights_into(self.learning_agent_with_old_state)
@@ -49,3 +50,13 @@ class AmoebaTrainer:
             # 4. evalutating the new network is be done by having it play multiple games against the previous version, the
             #    performance of the agent is quantified according to the Elo rating system which calcualtes a rating from
             #    the winrate of the agent and the rating of the previous version
+
+    def play_games_between_agents(self, agent_one, agent_two):
+        game_group_1 = GameGroup(int(self.batch_size / 2), self.map_size, agent_one, agent_two,
+                                 self.view, log_progress=True)
+        game_group_2 = GameGroup(int(self.batch_size / 2), self.map_size, agent_two, agent_one,
+                                 self.view, log_progress=True)
+
+        played_games = game_group_1.play_all_games()
+        played_games.extend(game_group_2.play_all_games())
+        return played_games
