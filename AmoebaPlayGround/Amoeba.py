@@ -4,6 +4,7 @@ from typing import List
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 
 win_sequence_length = 5
+map_size = (8, 8)
 
 class Move:
     def __init__(self, board_state, step, player: Player):
@@ -12,7 +13,7 @@ class Move:
         self.player = player
 
 class AmoebaGame:
-    def __init__(self, map_size, view=None):
+    def __init__(self, view=None):
         self.view = view
         if len(map_size) != 2:
             raise Exception('Map must be two dimensional but found shape %s' % (map_size))

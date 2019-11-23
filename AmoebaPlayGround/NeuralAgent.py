@@ -10,6 +10,7 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Add, Batch
 from keras.models import Model
 from keras.optimizers import SGD, Adam
 
+import AmoebaPlayGround.Amoeba as Amoeba
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 from AmoebaPlayGround.RewardCalculator import TrainingSample
@@ -76,11 +77,10 @@ class ResNetLike(NetworkModel):
 
 
 class NeuralAgent(AmoebaAgent):
-    def __init__(self, board_size=None, model_name=None, load_latest_model=False,
-                 model_creator: NetworkModel = ShallowNetwork()):
-        if board_size is None and model_name is None and not load_latest_model:
-            raise Exception('board size, file path and load latest model cannot both be None/False')
+    def __init__(self, model_name=None, load_latest_model=False,
+                 model_type: NetworkModel = ShallowNetwork()):
         self.graph = tf.Graph()
+        self.model_type = model_type
         with self.graph.as_default():
             self.session = tf.Session()
             with self.session.as_default():
@@ -88,8 +88,8 @@ class NeuralAgent(AmoebaAgent):
                     self.get_latest_model()
                 else:
                     if model_name is None:
-                        self.board_size = board_size
-                        self.model: Model = model_creator.create_model(self.board_size)
+                        self.map_size = Amoeba.map_size
+                        self.model: Model = model_type.create_model(self.map_size)
                     else:
                         self.load_model(self.get_model_file_path(model_name))
 
@@ -100,7 +100,7 @@ class NeuralAgent(AmoebaAgent):
 
     def load_model(self, file_path):
         self.model: Model = keras.models.load_model(file_path)
-        self.board_size = self.model.get_layer(index=0).output_shape[1:3]
+        self.map_size = self.model.get_layer(index=0).output_shape[1:3]
 
     def get_model_file_path(self, model_name):
         return os.path.join(models_folder, model_name + '.h5')
@@ -136,10 +136,10 @@ class NeuralAgent(AmoebaAgent):
         return valid_steps, valid_probabilities / np.sum(valid_probabilities)
 
     def to_2d(self, index_1d):
-        return (int(np.floor(index_1d / self.board_size[0])), index_1d % self.board_size[0])
+        return (int(np.floor(index_1d / self.map_size[0])), index_1d % self.map_size[0])
 
     def to_1d(self, index_2d):
-        return int(index_2d[0] * self.board_size[0] + index_2d[1])
+        return int(index_2d[0] * self.map_size[0] + index_2d[1])
 
     def get_model_output(self, game_boards: List[AmoebaBoard]):
         formatted_input = self.format_input(game_boards)
@@ -170,7 +170,7 @@ class NeuralAgent(AmoebaAgent):
         return numeric_representation
 
     def one_hot_encode_output(self, output):
-        expanded_dims = np.zeros(np.prod(self.board_size))
+        expanded_dims = np.zeros(np.prod(self.map_size))
         output_1d = self.to_1d(output)
         expanded_dims[output_1d] = 1
         return expanded_dims

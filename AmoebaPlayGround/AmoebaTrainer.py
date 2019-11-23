@@ -13,14 +13,13 @@ class AmoebaTrainer:
         self.self_play = self_play
         if self.self_play:
             # TODO have a factory method so neuralagent doesn't have to be hardcoded
-            self.learning_agent_with_old_state = NeuralAgent(self.learning_agent.board_size)
+            self.learning_agent_with_old_state = NeuralAgent(model_type=self.learning_agent.model_type)
             self.teaching_agents.append(self.learning_agent_with_old_state)
 
-    def train(self, batch_size=1, map_size=(8, 8), view=None, num_episodes=1):
+    def train(self, batch_size=1, view=None, num_episodes=1):
         self.batch_size = batch_size
-        self.map_size = map_size
         self.view = view
-        evaluator = EloEvaluator(map_size)
+        evaluator = EloEvaluator()
         evaluator.set_reference_agent(self.learning_agent_with_old_state)
         for episode_index in range(num_episodes):
             print('\nEpisode %d:' % episode_index)
@@ -52,9 +51,9 @@ class AmoebaTrainer:
             #    the winrate of the agent and the rating of the previous version
 
     def play_games_between_agents(self, agent_one, agent_two):
-        game_group_1 = GameGroup(int(self.batch_size / 2), self.map_size, agent_one, agent_two,
+        game_group_1 = GameGroup(int(self.batch_size / 2), agent_one, agent_two,
                                  self.view, log_progress=True)
-        game_group_2 = GameGroup(int(self.batch_size / 2), self.map_size, agent_two, agent_one,
+        game_group_2 = GameGroup(int(self.batch_size / 2), agent_two, agent_one,
                                  self.view, log_progress=True)
 
         played_games = game_group_1.play_all_games()

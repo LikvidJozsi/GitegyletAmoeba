@@ -18,11 +18,10 @@ class Evaluator:
 
 
 class EloEvaluator(Evaluator):
-    def __init__(self, map_size, evaluation_match_count=100):
+    def __init__(self, evaluation_match_count=100):
         self.reference_agent = None
         self.reference_agent_rating = None
         self.evaluation_match_count = evaluation_match_count
-        self.map_size = map_size
 
     def evaluate_agent(self, agent: AmoebaAgent):
         self.evaluate_against_fixed_references(agent)
@@ -44,9 +43,9 @@ class EloEvaluator(Evaluator):
 
     def calculate_expected_score(self, agent_to_evaluate, reference_agent, evaluation_match_count):
         game_group_size = int(evaluation_match_count / 2)
-        game_group_reference_starts = GameGroup(game_group_size, self.map_size,
+        game_group_reference_starts = GameGroup(game_group_size,
                                                 reference_agent, agent_to_evaluate)
-        game_group_agent_started = GameGroup(game_group_size, self.map_size,
+        game_group_agent_started = GameGroup(game_group_size,
                                              agent_to_evaluate, reference_agent)
         finished_games_reference_started = game_group_reference_starts.play_all_games()
         finished_games_agent_started = game_group_agent_started.play_all_games()
