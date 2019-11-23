@@ -1,7 +1,7 @@
 from AmoebaPlayGround import AmoebaAgent
 from AmoebaPlayGround.Evaluator import EloEvaluator
 from AmoebaPlayGround.GameGroup import GameGroup
-from AmoebaPlayGround.NeuralAgent import NeuralNetwork
+from AmoebaPlayGround.NeuralAgent import NeuralAgent
 from AmoebaPlayGround.RewardCalculator import PolicyGradients
 
 
@@ -13,7 +13,7 @@ class AmoebaTrainer:
         self.self_play = self_play
         if self.self_play:
             # TODO have a factory method so neuralagent doesn't have to be hardcoded
-            self.learning_agent_with_old_state = NeuralNetwork(self.learning_agent.board_size)
+            self.learning_agent_with_old_state = NeuralAgent(self.learning_agent.board_size)
             self.teaching_agents.append(self.learning_agent_with_old_state)
 
     def train(self, batch_size=1, map_size=(8, 8), view=None, num_episodes=1):
