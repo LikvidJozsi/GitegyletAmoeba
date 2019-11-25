@@ -77,18 +77,17 @@ class AmoebaGame:
                                                               y_direction=1, x_direction=1) or  # diagonal1
                       self.is_there_winning_line_in_direction(y_start=y, x_start=x - win_sequence_length + 1,
                                                               y_direction=0, x_direction=1) or  # horizontal
-                      self.is_there_winning_line_in_direction(y_start=y + win_sequence_length + 1,
+                      self.is_there_winning_line_in_direction(y_start=y + win_sequence_length - 1,
                                                               x_start=x - win_sequence_length + 1,
                                                               y_direction=-1, x_direction=1))  # diagonal2
+        is_draw = self.is_map_full()
         if player_won:
             self.winner = self.previous_player
-            return True
-        is_draw = self.is_map_full()
         if is_draw:
             self.winner = Player.NOBODY
-        if (player_won or is_draw) and self.view != None:
+        if (player_won or is_draw) and self.view is not None:
             self.view.game_ended(self.winner)
-        return is_draw
+        return is_draw or player_won
 
     def is_map_full(self):
         return self.num_steps == self.map.get_size()
