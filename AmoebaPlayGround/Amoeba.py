@@ -77,7 +77,7 @@ class AmoebaGame:
                                                               y_direction=1, x_direction=1) or  # diagonal1
                       self.is_there_winning_line_in_direction(y_start=y, x_start=x - win_sequence_length + 1,
                                                               y_direction=0, x_direction=1) or  # horizontal
-                      self.is_there_winning_line_in_direction(y_start=y + win_sequence_length + 1,
+                      self.is_there_winning_line_in_direction(y_start=y + win_sequence_length - 1,
                                                               x_start=x - win_sequence_length + 1,
                                                               y_direction=-1, x_direction=1))  # diagonal2
         is_draw = self.is_map_full()
