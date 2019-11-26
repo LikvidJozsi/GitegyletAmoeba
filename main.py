@@ -1,7 +1,8 @@
 import AmoebaPlayGround.Amoeba as Amoeba
 from AmoebaPlayGround.AmoebaAgent import RandomAgent
 from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
-from AmoebaPlayGround.NeuralAgent import NeuralAgent, ShallowNetwork
+from AmoebaPlayGround.HandWrittenAgent import HandWrittenAgent
+from AmoebaPlayGround.NeuralAgent import NeuralAgent, ResNetLike
 # graphicalView = GraphicalView((10, 10))
 # game_board = np.array([[0,0,0,0],[0,1,1,1],[-1,-1,-1,0],[0,1,-1,0]])
 # graphicalView.display_game_state(game_board)
@@ -13,9 +14,10 @@ from AmoebaPlayGround.RewardCalculator import PolicyGradients
 Amoeba.map_size = (8, 8)
 Amoeba.win_sequence_length = 5
 
-learning_agent = NeuralAgent(model_type=ShallowNetwork())
+learning_agent = NeuralAgent(model_type=ResNetLike())
 random_agent = RandomAgent()
-trainer = AmoebaTrainer(learning_agent, teaching_agents=[random_agent], self_play=True,
+hand_written_agent = HandWrittenAgent()
+trainer = AmoebaTrainer(learning_agent, teaching_agents=[random_agent, hand_written_agent], self_play=True,
                         reward_calculator=PolicyGradients(teach_with_losses=False))
 
 trainer.train(batch_size=500, num_episodes=5)
