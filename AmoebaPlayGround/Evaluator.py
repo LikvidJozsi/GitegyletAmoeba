@@ -1,13 +1,18 @@
 import collections
+
 import math
 
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent, RandomAgent
 from AmoebaPlayGround.GameBoard import Player
 from AmoebaPlayGround.GameGroup import GameGroup
+from AmoebaPlayGround.HandWrittenAgent import HandWrittenAgent
 
 ReferenceAgent = collections.namedtuple('ReferenceAgent', 'name instance evaluation_match_count')
 fix_reference_agents = [ReferenceAgent(name='RandomAgent', instance=RandomAgent(),
-                                       evaluation_match_count=100)]
+                                       evaluation_match_count=100),
+                        ReferenceAgent(name='HandWrittenAgent', instance=HandWrittenAgent(),
+                                       evaluation_match_count=50)
+                        ]
 
 class Evaluator:
     def evaluate_agent(self, agent: AmoebaAgent):
