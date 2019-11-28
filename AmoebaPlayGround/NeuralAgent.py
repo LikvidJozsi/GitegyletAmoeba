@@ -82,7 +82,9 @@ class NeuralAgent(AmoebaAgent):
         self.graph = tf.Graph()
         self.model_type = model_type
         with self.graph.as_default():
-            self.session = tf.Session()
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            self.session = tf.Session(config=config)
             with self.session.as_default():
                 if load_latest_model:
                     self.get_latest_model()
@@ -109,7 +111,6 @@ class NeuralAgent(AmoebaAgent):
         with self.graph.as_default():
             with self.session.as_default():
                 self.model.save(self.get_model_file_path(model_name))
-
 
     def get_step(self, game_boards: List[AmoebaBoard]):
         output = self.get_model_output(game_boards)
