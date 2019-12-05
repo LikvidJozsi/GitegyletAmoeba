@@ -17,7 +17,7 @@ Amoeba.win_sequence_length = 5
 learning_agent = NeuralAgent(model_type=ResNetLike())
 random_agent = RandomAgent()
 hand_written_agent = HandWrittenAgent()
-trainer = AmoebaTrainer(learning_agent, teaching_agents=[random_agent, hand_written_agent], self_play=True,
+trainer = AmoebaTrainer(learning_agent, teaching_agents=[hand_written_agent], self_play=False,
                         reward_calculator=PolicyGradients(teach_with_losses=False))
 
-trainer.train(batch_size=500, num_episodes=5)
+trainer.train(batch_size=500, num_episodes=200)

@@ -30,8 +30,10 @@ class EloEvaluator(Evaluator):
 
     def evaluate_agent(self, agent: AmoebaAgent):
         self.evaluate_against_fixed_references(agent)
-        return self.evaluate_against_agent(agent_to_evaluate=agent, reference_agent=self.reference_agent)
-
+        if self.reference_agent is not None:
+            return self.evaluate_against_agent(agent_to_evaluate=agent, reference_agent=self.reference_agent)
+        else:
+            return 0
     def evaluate_against_fixed_references(self, agent_to_evaluate):
         for reference_agent in fix_reference_agents:
             score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,

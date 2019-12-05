@@ -20,7 +20,8 @@ class AmoebaTrainer:
         self.batch_size = batch_size
         self.view = view
         evaluator = EloEvaluator()
-        evaluator.set_reference_agent(self.learning_agent_with_old_state)
+        if self.self_play:
+            evaluator.set_reference_agent(self.learning_agent_with_old_state)
         for episode_index in range(num_episodes):
             print('\nEpisode %d:' % episode_index)
             played_games = []
