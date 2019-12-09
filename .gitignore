@@ -2,3 +2,7 @@
 **__pycache__
 #For Pycharm projects
 *.idea
+
+#For log files
+*.log
+

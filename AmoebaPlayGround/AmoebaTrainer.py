@@ -1,9 +1,13 @@
+import os
+
 from AmoebaPlayGround import AmoebaAgent
 from AmoebaPlayGround.Evaluator import EloEvaluator
 from AmoebaPlayGround.GameGroup import GameGroup
 from AmoebaPlayGround.NeuralAgent import NeuralAgent
 from AmoebaPlayGround.RewardCalculator import PolicyGradients
+from datetime import datetime
 
+logs_folder = 'Logs/'
 
 class AmoebaTrainer:
     def __init__(self, learning_agent, teaching_agents, reward_calculator=PolicyGradients(), self_play=True):
@@ -16,7 +20,13 @@ class AmoebaTrainer:
             self.learning_agent_with_old_state = NeuralAgent(model_type=self.learning_agent.model_type)
             self.teaching_agents.append(self.learning_agent_with_old_state)
 
-    def train(self, batch_size=1, view=None, num_episodes=1):
+    def train(self, batch_size=1, view=None, num_episodes=1, log_file_name=""):
+        if log_file_name == "":
+            date_time = datetime.now()
+            time_stamp = date_time.strftime("%Y-%m-%d_%H-%M-%S")
+            log_file_name = time_stamp + ".log"
+        log_file_name = os.path.join(logs_folder, log_file_name)
+        log_file = open("" + log_file_name, "a+")
         self.batch_size = batch_size
         self.view = view
         evaluator = EloEvaluator()
