@@ -23,8 +23,8 @@ class AmoebaTrainer:
     def train(self, batch_size=1, view=None, num_episodes=1, log_file_name=""):
         if log_file_name == "":
             date_time = datetime.now()
-            time_stamp = date_time.strftime("%Y-%m-%d_%H-%M-%S")
-            log_file_name = time_stamp + ".log"
+            log_file_name = date_time.strftime("%Y-%m-%d_%H-%M-%S")
+        log_file_name = log_file_name + ".log"
         log_file_name = os.path.join(logs_folder, log_file_name)
         log_file = open("" + log_file_name, "a+")
         self.batch_size = batch_size
