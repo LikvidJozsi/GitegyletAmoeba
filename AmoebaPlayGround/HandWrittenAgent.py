@@ -1,6 +1,7 @@
 import collections
-import math
+import random
 
+import math
 import numpy as np
 
 import AmoebaPlayGround.Amoeba as Amoeba
@@ -10,7 +11,104 @@ from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol
 Importance = collections.namedtuple('Importance', 'level value')
 
 
+class MoveSelectionMethod:
+    def get_step_from_importances(self, importances, highest_level):
+        self.reset()
+        highest_importance_level = highest_level
+        highest_importance_value = 0
+        for row_index, row in enumerate(importances):
+            for column_index, importance in enumerate(row):
+                if importance.level > highest_importance_level:
+                    highest_importance_level = importance.level
+                    highest_importance_value = importance.value
+                    self.new_highest_level_move((row_index, column_index))
+                elif importance.level == highest_importance_level:
+                    self.new_same_level_move((row_index, column_index))
+                    if importance.value > highest_importance_value:
+                        highest_importance_value = importance.value
+                        self.new_highest_value_move((row_index, column_index))
+                    elif importance.value == highest_importance_value:
+                        self.new_same_value_move((row_index, column_index))
+        return self.select_move()
+
+    def new_same_value_move(self, move):
+        pass
+
+    def new_same_level_move(self, move):
+        pass
+
+    def new_highest_level_move(self, move):
+        pass
+
+    def new_highest_value_move(self, move):
+        pass
+
+    def reset(self):
+        pass
+
+    def select_move(self) -> tuple:
+        pass
+
+
+class DeterministicMoveSelection(MoveSelectionMethod):
+    def __init__(self):
+        self.best_move = (0, 0)
+
+    def reset(self):
+        self.best_move = (0, 0)
+
+    def new_highest_level_move(self, move):
+        self.best_move = move
+
+    def new_highest_value_move(self, move):
+        self.best_move = move
+
+    def select_move(self) -> tuple:
+        return self.best_move
+
+
+class AnyFromHighestValueSelection(MoveSelectionMethod):
+    def __init__(self):
+        self.best_moves = []
+
+    def reset(self):
+        self.best_moves = []
+
+    def new_same_value_move(self, move):
+        self.best_moves.append(move)
+
+    def new_highest_level_move(self, move):
+        self.best_moves = [move]
+
+    def new_highest_value_move(self, move):
+        self.best_moves = [move]
+
+    def select_move(self) -> tuple:
+        return random.sample(self.best_moves, 1)[0]
+
+
+class AnyFromHighestLevelSelection(MoveSelectionMethod):
+    def __init__(self):
+        self.best_moves = []
+
+    def reset(self):
+        self.best_moves = []
+
+    def new_highest_level_move(self, move):
+        self.best_moves = [move]
+
+    def new_same_level_move(self, move):
+        self.best_moves.append(move)
+
+    def select_move(self) -> tuple:
+        return random.sample(self.best_moves, 1)[0]
+
+
 class HandWrittenAgent(AmoebaAgent):
+
+    def __init__(self, move_selector: MoveSelectionMethod = AnyFromHighestValueSelection()):
+        self.move_selector = move_selector
+
     def get_step(self, game_boards):
         steps = []
         for board in game_boards:
@@ -25,25 +123,13 @@ class HandWrittenAgent(AmoebaAgent):
         highest_defensive_level = self.get_highest_importance_level(defensive_importances)
         if highest_offensive_level >= highest_defensive_level:
             importances_to_use = offensive_importances
+            highest_level = highest_offensive_level
         else:
             importances_to_use = defensive_importances
-        return self.get_step_from_importances(importances_to_use)
+            highest_level = highest_defensive_level
+        return self.move_selector.get_step_from_importances(importances_to_use, highest_level)
 
-    def get_step_from_importances(self, importances):
-        best_move = (0, 0)
-        highest_importance_level = importances[0, 0].level
-        highest_importance_value = importances[0, 0].value
-        for row_index, row in enumerate(importances):
-            for column_index, importance in enumerate(row):
-                if importance.level > highest_importance_level:
-                    highest_importance_level = importance.level
-                    highest_importance_value = importance.value
-                    best_move = (row_index, column_index)
-                elif importance.level == highest_importance_level and \
-                                highest_importance_value < importance.value:
-                    highest_importance_value = importance.value
-                    best_move = (row_index, column_index)
-        return best_move
+
 
     def get_highest_importance_level(self, importances):
         max_level = Amoeba.win_sequence_length - 1
