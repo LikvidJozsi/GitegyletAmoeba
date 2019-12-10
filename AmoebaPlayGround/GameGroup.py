@@ -26,7 +26,14 @@ class GameGroup:
                     finished_games.append(game)
             self.games = [game for game in self.games if not game in finished_games]
             self.print_progress(len(finished_games) / number_of_games)
-        return finished_games
+
+        return (finished_games, self.get_average_game_length(finished_games))
+
+    def get_average_game_length(self, games):
+        sum_game_length = 0
+        for game in games:
+            sum_game_length += game.num_steps
+        return sum_game_length / len(games)
 
     def get_maps_of_games(self):
         maps = []

@@ -60,7 +60,7 @@ class ResNetLike(NetworkModel):
         flatten = Flatten()(relu)
         output = Dense(np.prod(map_size), activation='softmax')(flatten)
         model = Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer=Adam())
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.01))
         return model
 
     def identity_block(self, input, filters):

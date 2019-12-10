@@ -30,9 +30,11 @@ class EloEvaluator(Evaluator):
 
     def evaluate_agent(self, agent: AmoebaAgent):
         scores_against_fixed = self.evaluate_against_fixed_references(agent)
-        return scores_against_fixed, self.evaluate_against_agent(agent_to_evaluate=agent,
+        if self.reference_agent is not None:
+            return scores_against_fixed, self.evaluate_against_agent(agent_to_evaluate=agent,
                                                                  reference_agent=self.reference_agent)
-
+        else:
+            return scores_against_fixed, 0
     def evaluate_against_fixed_references(self, agent_to_evaluate):
         scores = {}
         for reference_agent in fix_reference_agents:
@@ -56,8 +58,8 @@ class EloEvaluator(Evaluator):
                                                 reference_agent, agent_to_evaluate)
         game_group_agent_started = GameGroup(game_group_size,
                                              agent_to_evaluate, reference_agent)
-        finished_games_reference_started = game_group_reference_starts.play_all_games()
-        finished_games_agent_started = game_group_agent_started.play_all_games()
+        finished_games_reference_started, _ = game_group_reference_starts.play_all_games()
+        finished_games_agent_started, _ = game_group_agent_started.play_all_games()
 
         games_agent_won, games_reference_won, draw_games = self.get_win_statistics(finished_games_agent_started)
         won_by_reference, lost_by_reference, draw = self.get_win_statistics(finished_games_reference_started)
