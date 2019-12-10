@@ -25,9 +25,9 @@ class AmoebaTrainer:
         if log_file_name == "":
             date_time = datetime.now()
             log_file_name = date_time.strftime("%Y-%m-%d_%H-%M-%S")
-        log_file_name = log_file_name + ".log"
-        log_file_name = os.path.join(logs_folder, log_file_name)
-        log_file = open(log_file_name, mode="a+", newline='')
+        log_file_path = log_file_name + ".log"
+        log_file_path = os.path.join(logs_folder, log_file_path)
+        log_file = open(log_file_path, mode="a+", newline='')
         log_file.write("episode\taverage_game_length\tloss\trating\t")
         for reference_agent in fix_reference_agents:
             log_file.write("%s\t" % reference_agent.name)
@@ -45,6 +45,7 @@ class AmoebaTrainer:
             for teacher_index, teaching_agent in enumerate(self.teaching_agents):
                 print('Playing games against ' + teaching_agent.get_name())
                 games, average_game_length = self.play_games_between_agents(self.learning_agent, teaching_agent)
+                print('Average game length against %s: %d' % (teaching_agent.get_name(), average_game_length))
                 aggregate_average_game_length += average_game_length
                 played_games.extend(games)
             aggregate_average_game_length /= len(self.teaching_agents)
@@ -65,6 +66,7 @@ class AmoebaTrainer:
             if self.self_play:
                 evaluator.set_reference_agent(self.learning_agent_with_old_state, agent_rating)
             log_file.write("\n")
+            self.learning_agent.save(log_file_name)
         log_file.close()
 
     def play_games_between_agents(self, agent_one, agent_two):
