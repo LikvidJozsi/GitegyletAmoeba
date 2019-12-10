@@ -26,12 +26,14 @@ class AmoebaTrainer:
             log_file_name = date_time.strftime("%Y-%m-%d_%H-%M-%S")
         log_file_name = log_file_name + ".log"
         log_file_name = os.path.join(logs_folder, log_file_name)
-        log_file = open("" + log_file_name, "a+")
+        log_file = open(log_file_name, mode="a+", newline='')
+        log_file.write("episode\tloss\tELO\n")  # TODO: save the score against the fix reference agents
         self.batch_size = batch_size
         self.view = view
         evaluator = EloEvaluator()
         evaluator.set_reference_agent(self.learning_agent_with_old_state)
         for episode_index in range(num_episodes):
+            log_file.write("%d\t" % episode_index)
             print('\nEpisode %d:' % episode_index)
             played_games = []
             for teacher_index, teaching_agent in enumerate(self.teaching_agents):
@@ -41,12 +43,16 @@ class AmoebaTrainer:
             if self.self_play:
                 self.learning_agent.copy_weights_into(self.learning_agent_with_old_state)
             print('Training agent:')
-            self.learning_agent.train(training_samples)
+            train_history = self.learning_agent.train(training_samples)
+            last_loss = train_history.history['loss'][-1]
+            log_file.write("%f\t" % last_loss)
             print('Evaluating agent:')
             agent_rating = evaluator.evaluate_agent(self.learning_agent)
+            log_file.write("%f\n" % agent_rating)
             print('Learning agent rating: %f' % agent_rating)
             if self.self_play:
                 evaluator.set_reference_agent(self.learning_agent_with_old_state, agent_rating)
+        log_file.close()
 
 
             # 1. There is a basic neural network implementation that is conv -> dense. Further ideas:
