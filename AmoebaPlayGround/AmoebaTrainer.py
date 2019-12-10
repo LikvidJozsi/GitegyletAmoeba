@@ -1,9 +1,14 @@
+import os
+
 from AmoebaPlayGround import AmoebaAgent
 from AmoebaPlayGround.Evaluator import EloEvaluator
 from AmoebaPlayGround.GameGroup import GameGroup
 from AmoebaPlayGround.NeuralAgent import NeuralAgent
 from AmoebaPlayGround.RewardCalculator import PolicyGradients
+from datetime import datetime
+from AmoebaPlayGround.Evaluator import fix_reference_agents
 
+logs_folder = 'Logs/'
 
 class AmoebaTrainer:
     def __init__(self, learning_agent, teaching_agents, reward_calculator=PolicyGradients(), self_play=True):
@@ -16,13 +21,24 @@ class AmoebaTrainer:
             self.learning_agent_with_old_state = NeuralAgent(model_type=self.learning_agent.model_type)
             self.teaching_agents.append(self.learning_agent_with_old_state)
 
-    def train(self, batch_size=1, view=None, num_episodes=1):
+    def train(self, batch_size=1, view=None, num_episodes=1, log_file_name=""):
+        if log_file_name == "":
+            date_time = datetime.now()
+            log_file_name = date_time.strftime("%Y-%m-%d_%H-%M-%S")
+        log_file_name = log_file_name + ".log"
+        log_file_name = os.path.join(logs_folder, log_file_name)
+        log_file = open(log_file_name, mode="a+", newline='')
+        log_file.write("episode\tloss\trating\t")
+        for reference_agent in fix_reference_agents:
+            log_file.write("%s\t" % reference_agent.name)
+        log_file.write("\n")
         self.batch_size = batch_size
         self.view = view
         evaluator = EloEvaluator()
         if self.self_play:
             evaluator.set_reference_agent(self.learning_agent_with_old_state)
         for episode_index in range(num_episodes):
+            log_file.write("%d\t" % episode_index)
             print('\nEpisode %d:' % episode_index)
             played_games = []
             for teacher_index, teaching_agent in enumerate(self.teaching_agents):
@@ -32,12 +48,19 @@ class AmoebaTrainer:
             if self.self_play:
                 self.learning_agent.copy_weights_into(self.learning_agent_with_old_state)
             print('Training agent:')
-            self.learning_agent.train(training_samples)
+            train_history = self.learning_agent.train(training_samples)
+            last_loss = train_history.history['loss'][-1]
+            log_file.write("%f\t" % last_loss)
             print('Evaluating agent:')
-            agent_rating = evaluator.evaluate_agent(self.learning_agent)
+            scores_against_fixed, agent_rating = evaluator.evaluate_agent(self.learning_agent)
+            log_file.write("%f\t" % agent_rating)
+            for reference_agent in fix_reference_agents:
+                log_file.write("%f\t" % scores_against_fixed[reference_agent.name])
             print('Learning agent rating: %f' % agent_rating)
             if self.self_play:
                 evaluator.set_reference_agent(self.learning_agent_with_old_state, agent_rating)
+            log_file.write("\n")
+        log_file.close()
 
 
             # 1. There is a basic neural network implementation that is conv -> dense. Further ideas:

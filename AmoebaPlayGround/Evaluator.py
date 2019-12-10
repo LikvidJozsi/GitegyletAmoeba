@@ -29,17 +29,21 @@ class EloEvaluator(Evaluator):
         self.evaluation_match_count = evaluation_match_count
 
     def evaluate_agent(self, agent: AmoebaAgent):
-        self.evaluate_against_fixed_references(agent)
+        scores_against_fixed = self.evaluate_against_fixed_references(agent)
         if self.reference_agent is not None:
-            return self.evaluate_against_agent(agent_to_evaluate=agent, reference_agent=self.reference_agent)
+            return scores_against_fixed, self.evaluate_against_agent(agent_to_evaluate=agent,
+                                                                 reference_agent=self.reference_agent)
         else:
             return 0
     def evaluate_against_fixed_references(self, agent_to_evaluate):
+        scores = {}
         for reference_agent in fix_reference_agents:
             score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
                                                   reference_agent=reference_agent.instance,
                                                   evaluation_match_count=reference_agent.evaluation_match_count)
+            scores[reference_agent.name] = score
             print('Score against %s: %f' % (reference_agent.name, score))
+        return scores
 
     def evaluate_against_agent(self, agent_to_evaluate, reference_agent):
         agent_expected_score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,

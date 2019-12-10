@@ -187,8 +187,9 @@ class NeuralAgent(AmoebaAgent):
         input = np.array([self.one_hot_encode_input(x) for x in input])
         with self.graph.as_default():
             with self.session.as_default():
-                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15, shuffle=True,
-                               verbose=2, batch_size=32)
+                return self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15,
+                                      shuffle=True,
+                                      verbose=2, batch_size=32)
 
     def get_weights(self):
         with self.graph.as_default():
