@@ -6,6 +6,7 @@ from AmoebaPlayGround.GameGroup import GameGroup
 from AmoebaPlayGround.NeuralAgent import NeuralAgent
 from AmoebaPlayGround.RewardCalculator import PolicyGradients
 from datetime import datetime
+from AmoebaPlayGround.Evaluator import fix_reference_agents
 
 logs_folder = 'Logs/'
 
@@ -27,7 +28,10 @@ class AmoebaTrainer:
         log_file_name = log_file_name + ".log"
         log_file_name = os.path.join(logs_folder, log_file_name)
         log_file = open(log_file_name, mode="a+", newline='')
-        log_file.write("episode\tloss\tELO\n")  # TODO: save the score against the fix reference agents
+        log_file.write("episode\tloss\trating\t")
+        for reference_agent in fix_reference_agents:
+            log_file.write("%s\t" % reference_agent.name)
+        log_file.write("\n")
         self.batch_size = batch_size
         self.view = view
         evaluator = EloEvaluator()
@@ -47,11 +51,14 @@ class AmoebaTrainer:
             last_loss = train_history.history['loss'][-1]
             log_file.write("%f\t" % last_loss)
             print('Evaluating agent:')
-            agent_rating = evaluator.evaluate_agent(self.learning_agent)
-            log_file.write("%f\n" % agent_rating)
+            scores_against_fixed, agent_rating = evaluator.evaluate_agent(self.learning_agent)
+            log_file.write("%f\t" % agent_rating)
+            for reference_agent in fix_reference_agents:
+                log_file.write("%f\t" % scores_against_fixed[reference_agent.name])
             print('Learning agent rating: %f' % agent_rating)
             if self.self_play:
                 evaluator.set_reference_agent(self.learning_agent_with_old_state, agent_rating)
+            log_file.write("\n")
         log_file.close()
 
 
