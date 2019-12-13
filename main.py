@@ -41,16 +41,16 @@ for i in range(100):
     print('\nCycle {}'.format(i))
 
     # These two steps could be parallelised.
-    print('\nTraining agent against random agent.')
+    print(f'\nC{i}: Training agent against random agent.')
     non_episodic_train(trainer_ai_random, batch_againt_random)
 
-    print('\nTraining counter agent against random.\nCycle {}'.format(i))
+    print(f'\nC{i}: Training counter agent against random.')
     non_episodic_train(trainer_aic_random, batch_againt_random)
 
-    print('\nTraining agent against counter agent.\nCycle {}'.format(i))
+    print(f'\nC{i}: Training agent against counter agent.')
     non_episodic_train(trainer_ai_aic, batch_against_ai)
 
-    print('\nTraining counter agent against agent.\nCycle {}'.format(i))
+    print(f'\nC{i}: Training counter agent against agent.')
     non_episodic_train(trainer_aic_ai, batch_against_ai)
 
     if i % save_step == 0:

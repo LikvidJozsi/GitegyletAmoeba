@@ -28,7 +28,7 @@ class TrainingSample:
 
 
 class PolicyGradients(RewardCalculator):
-    def __init__(self, discount_factor=0.7, reward_for_win=1, reward_for_loss=-1,
+    def __init__(self, discount_factor=0.6, reward_for_win=1, reward_for_loss=-1,
                  reward_for_tie=-0.5, reward_cutoff_threshold=0.05, teach_with_draws=False, teach_with_losses=False):
         self.discount_factor = discount_factor
         self.reward_for_win = reward_for_win
@@ -94,8 +94,8 @@ class PolicyGradients(RewardCalculator):
 
 
 class PolicyGradientsWithNegativeTeaching(PolicyGradients):
-    def __init__(self, nr_of_alternative_steps=2, reward_for_alt_move=1):
-        super().__init__()
+    def __init__(self, discount_factor=0.7, nr_of_alternative_steps=2, reward_for_alt_move=1):
+        super().__init__(discount_factor=discount_factor)
         self.nr_of_alternative_steps = nr_of_alternative_steps
         self.reward_for_alt_move = reward_for_alt_move
 
