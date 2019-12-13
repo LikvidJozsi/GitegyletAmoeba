@@ -1,58 +1,30 @@
-from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
-from AmoebaPlayGround.NeuralAgent import NeuralNetwork
-from AmoebaPlayGround.AmoebaAgent import RandomAgent
+import argparse
 
+import AmoebaPlayGround.Amoeba as Amoeba
+from AmoebaPlayGround.AmoebaAgent import RandomAgent
+from AmoebaPlayGround.AmoebaTrainer import AmoebaTrainer
+from AmoebaPlayGround.HandWrittenAgent import HandWrittenAgent
+from AmoebaPlayGround.NeuralAgent import NeuralAgent, ShallowNetwork
 # graphicalView = GraphicalView((10, 10))
 # game_board = np.array([[0,0,0,0],[0,1,1,1],[-1,-1,-1,0],[0,1,-1,0]])
 # graphicalView.display_game_state(game_board)
 # demo
 # consoleAgent = ConsoleAgent()
 # view = ConsoleView()
-from AmoebaPlayGround.RewardCalculator import PolicyGradients, PolicyGradientsWithNegativeTeaching
+from AmoebaPlayGround.RewardCalculator import PolicyGradients
 
-map_size = (8, 8)
-win_sequence_length = 5
+parser = argparse.ArgumentParser()
+parser.add_argument('--log-file-name', action="store",
+                    dest="log_file_name", default="")
+args = parser.parse_args()
 
-agent = NeuralNetwork(map_size)
-counter_agent = NeuralNetwork(map_size)
+Amoeba.map_size = (8, 8)
+Amoeba.win_sequence_length = 5
+
+learning_agent = NeuralAgent(model_type=ShallowNetwork())
 random_agent = RandomAgent()
+hand_written_agent = HandWrittenAgent()
+trainer = AmoebaTrainer(learning_agent, teaching_agents=[hand_written_agent], self_play=False,
+                        reward_calculator=PolicyGradients(teach_with_losses=False))
 
-trainer_ai_random = AmoebaTrainer(agent, random_agent)
-trainer_aic_random = AmoebaTrainer(counter_agent, random_agent)
-trainer_ai_aic = AmoebaTrainer(agent, counter_agent,
-                               reward_calculator=PolicyGradientsWithNegativeTeaching())
-trainer_aic_ai = AmoebaTrainer(counter_agent, agent,
-                               reward_calculator=PolicyGradientsWithNegativeTeaching())
-
-
-batch_againt_random = 1000
-batch_against_ai = 3000
-save_step = 1
-
-
-def non_episodic_train(trainer, batch_size):
-    trainer.train(batch_size, map_size=map_size,
-                  win_sequence_length=win_sequence_length,
-                  view=None,
-                  num_episodes=1)
-
-
-for i in range(100):
-    print('\nCycle {}'.format(i))
-
-    # These two steps could be parallelised.
-    print(f'\nC{i}: Training agent against random agent.')
-    non_episodic_train(trainer_ai_random, batch_againt_random)
-
-    print(f'\nC{i}: Training counter agent against random.')
-    non_episodic_train(trainer_aic_random, batch_againt_random)
-
-    print(f'\nC{i}: Training agent against counter agent.')
-    non_episodic_train(trainer_ai_aic, batch_against_ai)
-
-    print(f'\nC{i}: Training counter agent against agent.')
-    non_episodic_train(trainer_aic_ai, batch_against_ai)
-
-    if i % save_step == 0:
-        agent.save('model{}'.format(i))
-        counter_agent.save('model_c{}'.format(i))
+trainer.train(batch_size=500, num_episodes=50, log_file_name=args.log_file_name)

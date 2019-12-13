@@ -4,13 +4,13 @@ from AmoebaPlayGround.Amoeba import AmoebaGame, Player
 
 
 class GameGroup:
-    def __init__(self, batch_size, map_size, win_sequence_length, x_agent, o_agent, view=None, log_progress=False):
+    def __init__(self, batch_size, x_agent, o_agent, view=None, log_progress=False):
         self.x_agent = x_agent
         self.o_agent = o_agent
         self.log_progress = log_progress
         self.games = []
         for index in range(batch_size):
-            self.games.append(AmoebaGame(map_size, win_sequence_length, view))
+            self.games.append(AmoebaGame(view))
 
     def play_all_games(self):
         finished_games = []
@@ -26,7 +26,14 @@ class GameGroup:
                     finished_games.append(game)
             self.games = [game for game in self.games if not game in finished_games]
             self.print_progress(len(finished_games) / number_of_games)
-        return finished_games
+
+        return (finished_games, self.get_average_game_length(finished_games))
+
+    def get_average_game_length(self, games):
+        sum_game_length = 0
+        for game in games:
+            sum_game_length += game.num_steps
+        return sum_game_length / len(games)
 
     def get_maps_of_games(self):
         maps = []

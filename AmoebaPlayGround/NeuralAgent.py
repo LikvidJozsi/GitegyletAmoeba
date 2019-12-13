@@ -5,10 +5,12 @@ from typing import List
 import keras
 import numpy as np
 import tensorflow as tf
-from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+from keras import regularizers
+from keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Add, BatchNormalization, Activation
 from keras.models import Model
 from keras.optimizers import SGD, Adam
 
+import AmoebaPlayGround.Amoeba as Amoeba
 from AmoebaPlayGround.AmoebaAgent import AmoebaAgent
 from AmoebaPlayGround.GameBoard import AmoebaBoard, Symbol, Player
 from AmoebaPlayGround.RewardCalculator import TrainingSample
@@ -16,20 +18,80 @@ from AmoebaPlayGround.RewardCalculator import TrainingSample
 models_folder = 'Models/'
 
 
-class NeuralNetwork(AmoebaAgent):
-    def __init__(self, board_size=None, model_name=None, load_latest_model=False):
-        if board_size is None and model_name is None and not load_latest_model:
-            raise Exception('board size, file path and load latest model cannot both be None/False')
+class NetworkModel:
+    def create_model(self, map_size):
+        pass
+
+
+class ShallowNetwork(NetworkModel):
+    def __init__(self, first_convolution_size=(9, 9)):
+        self.first_convolution_size = first_convolution_size
+
+    def create_model(self, map_size):
+        input = Input(shape=map_size + (2,))
+        conv_1 = Conv2D(32, kernel_size=self.first_convolution_size, activation='relu', padding='same')(input)
+        conv_2 = Conv2D(64, kernel_size=(3, 3), strides=(2, 2), activation='relu', padding='same')(conv_1)
+        pooling = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(conv_2)
+        conv_3 = Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same')(pooling)
+        flatten = Flatten()(conv_3)
+        dense_1 = Dense(256, activation='relu')(flatten)
+        output = Dense(np.prod(map_size), activation='softmax')(dense_1)
+        model = Model(inputs=input, outputs=output)
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.3))
+        return model
+
+
+class ResNetLike(NetworkModel):
+    def __init__(self, network_depth=8):
+        self.network_depth = network_depth
+
+    def create_model(self, map_size):
+        input = Input(shape=map_size + (2,))
+        conv_1 = Conv2D(128, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                        activity_regularizer=regularizers.l2(0.0001))(input)
+        batch_norm_1 = BatchNormalization()(conv_1)
+        relu_1 = Activation('relu')(batch_norm_1)
+        current_network_end = relu_1
+        for index in range(self.network_depth):
+            current_network_end = self.identity_block(current_network_end, filters=[128, 128])
+        dimension_reducer_convolution = Conv2D(2, kernel_size=(1, 1), strides=(1, 1))(current_network_end)
+        batch_normalization = BatchNormalization()(dimension_reducer_convolution)
+        relu = Activation('relu')(batch_normalization)
+        flatten = Flatten()(relu)
+        output = Dense(np.prod(map_size), activation='softmax')(flatten)
+        model = Model(inputs=input, outputs=output)
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.01))
+        return model
+
+    def identity_block(self, input, filters):
+        conv_1 = Conv2D(filters[0], kernel_size=(3, 3), strides=(1, 1), padding='same',
+                        activity_regularizer=regularizers.l2(0.0001))(input)
+        batch_norm_1 = BatchNormalization()(conv_1)
+        relu_1 = Activation('relu')(batch_norm_1)
+        conv_2 = Conv2D(filters[1], kernel_size=(3, 3), strides=(1, 1), padding='same',
+                        activity_regularizer=regularizers.l2(0.0001))(relu_1)
+        batch_norm_2 = BatchNormalization()(conv_2)
+        skip_connection = Add()([batch_norm_2, input])
+        relu_2 = Activation('relu')(skip_connection)
+        return relu_2
+
+
+class NeuralAgent(AmoebaAgent):
+    def __init__(self, model_name=None, load_latest_model=False,
+                 model_type: NetworkModel = ShallowNetwork()):
         self.graph = tf.Graph()
+        self.model_type = model_type
         with self.graph.as_default():
-            self.session = tf.Session()
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            self.session = tf.Session(config=config)
             with self.session.as_default():
                 if load_latest_model:
                     self.get_latest_model()
                 else:
                     if model_name is None:
-                        self.board_size = board_size
-                        self.model: Model = self.create_model()
+                        self.map_size = Amoeba.map_size
+                        self.model: Model = model_type.create_model(self.map_size)
                     else:
                         self.load_model(self.get_model_file_path(model_name))
 
@@ -40,7 +102,7 @@ class NeuralNetwork(AmoebaAgent):
 
     def load_model(self, file_path):
         self.model: Model = keras.models.load_model(file_path)
-        self.board_size = self.model.get_layer(index=0).output_shape[1:3]
+        self.map_size = self.model.get_layer(index=0).output_shape[1:3]
 
     def get_model_file_path(self, model_name):
         return os.path.join(models_folder, model_name + '.h5')
@@ -50,26 +112,6 @@ class NeuralNetwork(AmoebaAgent):
             with self.session.as_default():
                 self.model.save(self.get_model_file_path(model_name))
 
-    def create_model(self):
-        input = Input(shape=self.board_size + (2,))
-        conv_1 = Conv2D(32, kernel_size=(7, 7), activation='relu', padding='same')(input)
-        conv_2 = Conv2D(32, kernel_size=(5, 5), activation='relu', padding='same')(conv_1)
-        pooling = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(conv_2)
-        conv_3 = Conv2D(32, kernel_size=(5, 5), activation='relu', padding='same')(pooling)
-        conv_4 = Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same')(conv_3)
-        #pooling_2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(conv_4)
-        flatten = Flatten()(conv_4)
-        dense_1 = Dense(128, activation= 'relu')(flatten)
-        dropout_1 = Dropout(0.3)(dense_1)
-        dense_2 = Dense(256, activation='relu')(dropout_1)
-        dropout = Dropout(0.3)(dense_2)
-        output = Dense(np.prod(self.board_size), activation='softmax')(dropout)
-        model = Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.15))
-        #model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.15))
-
-        return model
-
     def get_step(self, game_boards: List[AmoebaBoard]):
         output = self.get_model_output(game_boards)
         return self.get_steps_from_output(output, game_boards)
@@ -78,14 +120,7 @@ class NeuralNetwork(AmoebaAgent):
         steps = []
         for probabilities, game_board in zip(output, game_boards):
             valid_steps, valid_probabilities = self.get_valid_steps(probabilities, game_board)
-
-            if np.random.randint(low=0, high=2) >= 0.4:
-                step_in_1d = valid_steps[np.argmax(valid_probabilities)]
-            else:
-                step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
-
-            #step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
-
+            step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
             step = self.to_2d(step_in_1d)
             steps.append(step)
         return steps
@@ -102,16 +137,16 @@ class NeuralNetwork(AmoebaAgent):
         return valid_steps, valid_probabilities / np.sum(valid_probabilities)
 
     def to_2d(self, index_1d):
-        return (int(np.floor(index_1d / self.board_size[0])), index_1d % self.board_size[0])
+        return (int(np.floor(index_1d / self.map_size[0])), index_1d % self.map_size[0])
 
     def to_1d(self, index_2d):
-        return int(index_2d[0] * self.board_size[0] + index_2d[1])
+        return int(index_2d[0] * self.map_size[0] + index_2d[1])
 
     def get_model_output(self, game_boards: List[AmoebaBoard]):
         formatted_input = self.format_input(game_boards)
         with self.graph.as_default():
             with self.session.as_default():
-                output = self.model.predict(formatted_input, batch_size=32)
+                output = self.model.predict(formatted_input, batch_size=256)
         # disclaimer: output has only one spatial dimension, the map is flattened
         return output
 
@@ -136,7 +171,7 @@ class NeuralNetwork(AmoebaAgent):
         return numeric_representation
 
     def one_hot_encode_output(self, output):
-        expanded_dims = np.zeros(np.prod(self.board_size))
+        expanded_dims = np.zeros(np.prod(self.map_size))
         output_1d = self.to_1d(output)
         expanded_dims[output_1d] = 1
         return expanded_dims
@@ -152,6 +187,22 @@ class NeuralNetwork(AmoebaAgent):
         input = np.array([self.one_hot_encode_input(x) for x in input])
         with self.graph.as_default():
             with self.session.as_default():
-                self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=10, shuffle=True,
-                               verbose=2, batch_size=32)
+                return self.model.fit(x=input, y=np.array(output), sample_weight=np.array(weights), epochs=15,
+                                      shuffle=True,
+                                      verbose=2, batch_size=32)
 
+    def get_weights(self):
+        with self.graph.as_default():
+            with self.session.as_default():
+                return self.model.get_weights()
+
+    def set_weights(self, weights):
+        with self.graph.as_default():
+            with self.session.as_default():
+                self.model.set_weights(weights)
+
+    def copy_weights_into(self, agent_to_copy_into):
+        agent_to_copy_into.set_weights(self.get_weights())
+
+    def get_name(self):
+        return 'NeuralAgent'
