@@ -87,7 +87,9 @@ class NeuralAgent(AmoebaAgent):
             self.session = tf.Session(config=config)
             with self.session.as_default():
                 if load_latest_model:
-                    self.get_latest_model()
+                    latest_model_file = self.get_latest_model()
+                    print("\n\nLoading model contained in file: %s\n\n" % (latest_model_file))
+                    self.load_model(latest_model_file)
                 else:
                     if model_name is None:
                         self.map_size = Amoeba.map_size
@@ -98,7 +100,7 @@ class NeuralAgent(AmoebaAgent):
     def get_latest_model(self):
         list_of_files = glob.glob(os.path.join(models_folder, '*.h5'))
         latest_file = max(list_of_files, key=os.path.getctime)
-        self.load_model(latest_file)
+        return latest_file
 
     def load_model(self, file_path):
         self.model: Model = keras.models.load_model(file_path)
@@ -116,11 +118,20 @@ class NeuralAgent(AmoebaAgent):
         output = self.get_model_output(game_boards)
         return self.get_steps_from_output(output, game_boards)
 
-    def get_steps_from_output(self, output, game_boards: List[AmoebaBoard]) -> Model:
+    def get_steps_from_output(self, output, game_boards: List[AmoebaBoard]):
         steps = []
         for probabilities, game_board in zip(output, game_boards):
             valid_steps, valid_probabilities = self.get_valid_steps(probabilities, game_board)
-            step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
+
+            exploitation_probability = np.random.uniform(0, 1)
+            if exploitation_probability < 0.4:
+                max_index = np.argmax(valid_probabilities)
+                step_in_1d = valid_steps[max_index]
+            else:
+                step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
+
+            # step_in_1d = np.random.choice(valid_steps, p=valid_probabilities)
+
             step = self.to_2d(step_in_1d)
             steps.append(step)
         return steps
@@ -206,3 +217,6 @@ class NeuralAgent(AmoebaAgent):
 
     def get_name(self):
         return 'NeuralAgent'
+
+    def print_model_saummary(self):
+        self.model.summary()

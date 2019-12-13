@@ -46,13 +46,31 @@ class EloEvaluator(Evaluator):
         return scores
 
     def evaluate_against_agent(self, agent_to_evaluate, reference_agent):
-        agent_expected_score = self.calculate_expected_score(agent_to_evaluate=agent_to_evaluate,
+        agent_expected_score = self.calculate_expected_score_for_rating(agent_to_evaluate=agent_to_evaluate,
                                                              reference_agent=reference_agent,
                                                              evaluation_match_count=self.evaluation_match_count)
         agent_rating = self.reference_agent_rating - 400 * math.log10(1 / agent_expected_score - 1)
         return agent_rating
 
     def calculate_expected_score(self, agent_to_evaluate, reference_agent, evaluation_match_count):
+        game_group_size = int(evaluation_match_count / 2)
+        game_group_reference_starts = GameGroup(game_group_size,
+                                                reference_agent, agent_to_evaluate)
+        game_group_agent_started = GameGroup(game_group_size,
+                                             agent_to_evaluate, reference_agent)
+        finished_games_reference_started, _ = game_group_reference_starts.play_all_games()
+        finished_games_agent_started, _ = game_group_agent_started.play_all_games()
+
+        games_agent_won, games_reference_won, draw_games = self.get_win_statistics(finished_games_agent_started)
+        won_by_reference, lost_by_reference, draw = self.get_win_statistics(finished_games_reference_started)
+        games_agent_won += lost_by_reference
+        games_reference_won += won_by_reference
+        draw_games += draw
+        all_games_num = games_agent_won + games_reference_won + draw_games
+        agent_expected_score = games_agent_won / all_games_num + 0.5 * draw_games / all_games_num
+        return agent_expected_score
+
+    def calculate_expected_score_for_rating(self, agent_to_evaluate, reference_agent, evaluation_match_count):
         game_group_size = int(evaluation_match_count / 2)
         game_group_reference_starts = GameGroup(game_group_size,
                                                 reference_agent, agent_to_evaluate)
