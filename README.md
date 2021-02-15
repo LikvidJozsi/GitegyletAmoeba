@@ -17,6 +17,10 @@ AmoebaTrainer is the orchestrator of learning, the training is done in its train
 - training the learning agent using these samples
 - evaluating the new agent version using an Evaluator. This Evaluator may calculate many metrics, for example winrate against certain other agents, or the [Élő score](https://en.wikipedia.org/wiki/Elo_rating_system) of the agent providing a scalar value describing the performance of the system.
 
+# Document
+
+During the project work we prepared a [report](document.pdf) on our system design and results.
+
 # Usage
 
 To start a basic learning process we need to decide on some basic parameters:
